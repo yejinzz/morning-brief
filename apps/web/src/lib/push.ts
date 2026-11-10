@@ -29,27 +29,29 @@ function deviceId(): string {
   return id;
 }
 
-/** 구독을 Supabase 에 upsert(endpoint 기준). RLS: anon INSERT/UPDATE 허용. */
+// 구독 저장: 플레인 INSERT. 중복(409)이면 PATCH 로 갱신.
+// (anon 에는 SELECT 정책이 없어 ON CONFLICT upsert 가 RLS 로 막히므로 INSERT/UPDATE 분리)
 async function saveSubscription(sub: PushSubscription): Promise<void> {
   const json = sub.toJSON();
-  const body = [
-    {
-      user_id: deviceId(),
-      endpoint: json.endpoint,
-      p256dh: json.keys?.p256dh,
-      auth: json.keys?.auth,
-      active: true,
-    },
-  ];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
+  const keys = { p256dh: json.keys?.p256dh, auth: json.keys?.auth };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions`, {
     method: 'POST',
-    headers: supabaseHeaders({
-      'Content-Type': 'application/json',
-      Prefer: 'resolution=merge-duplicates,return=minimal',
-    }),
-    body: JSON.stringify(body),
+    headers: supabaseHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify([{ user_id: deviceId(), endpoint: json.endpoint, ...keys, active: true }]),
   });
-  if (!res.ok) throw new Error(`구독 저장 실패 ${res.status}`);
+  if (res.ok) return;
+  if (res.status === 409) {
+    // 이미 등록된 endpoint → 활성화/키 갱신
+    const q = `endpoint=eq.${encodeURIComponent(json.endpoint ?? '')}`;
+    const patch = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?${q}`, {
+      method: 'PATCH',
+      headers: supabaseHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify({ ...keys, active: true }),
+    });
+    if (!patch.ok) throw new Error(`구독 갱신 실패 ${patch.status}`);
+    return;
+  }
+  throw new Error(`구독 저장 실패 ${res.status}`);
 }
 
 /** 서비스워커 등록 후 푸시 구독 + 서버 저장. 미구성/미지원이면 null. */
