@@ -3,7 +3,8 @@
 
 import type { Briefing } from '../types/contracts';
 import { getMockBriefing, mockAvailableDates, MOCK_LATEST_DATE } from './mockData';
-import { SupabaseBriefingsRepo, supabaseConfigured } from './briefingsRepoSupabase';
+import { SupabaseBriefingsRepo } from './briefingsRepoSupabase';
+import { supabaseConfigured } from './supabaseEnv';
 
 export interface BriefingsRepo {
   getByDate(date: string): Promise<Briefing | null>;

@@ -1,4 +1,6 @@
-// 클라이언트 푸시 구독 (M4). VAPID 공개키로 구독 → 서버 저장(저장은 M5 Supabase 연동).
+// 클라이언트 푸시 구독 (M5). VAPID 공개키로 구독 → Supabase push_subscriptions 에 저장(anon INSERT).
+
+import { SUPABASE_URL, supabaseConfigured, supabaseHeaders } from './supabaseEnv';
 
 /** VAPID 공개키(base64url) → Uint8Array(applicationServerKey). */
 export function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
@@ -13,18 +15,54 @@ export function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
 
 export function pushConfigured(): boolean {
-  return VAPID_PUBLIC_KEY.length > 0;
+  return VAPID_PUBLIC_KEY.length > 0 && supabaseConfigured();
 }
 
-/** 서비스워커 등록 후 푸시 구독. VAPID 키/SW 가 없으면 null. */
+/** 기기 식별자(로그인 없음 → 기기별 로컬 uuid). */
+function deviceId(): string {
+  const KEY = 'mb.device';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+/** 구독을 Supabase 에 upsert(endpoint 기준). RLS: anon INSERT/UPDATE 허용. */
+async function saveSubscription(sub: PushSubscription): Promise<void> {
+  const json = sub.toJSON();
+  const body = [
+    {
+      user_id: deviceId(),
+      endpoint: json.endpoint,
+      p256dh: json.keys?.p256dh,
+      auth: json.keys?.auth,
+      active: true,
+    },
+  ];
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
+    method: 'POST',
+    headers: supabaseHeaders({
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    }),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`구독 저장 실패 ${res.status}`);
+}
+
+/** 서비스워커 등록 후 푸시 구독 + 서버 저장. 미구성/미지원이면 null. */
 export async function subscribeToPush(): Promise<PushSubscription | null> {
   if (!pushConfigured() || !('serviceWorker' in navigator)) return null;
   const reg = await navigator.serviceWorker.ready;
   const existing = await reg.pushManager.getSubscription();
-  if (existing) return existing;
-  return reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-  });
-  // TODO(M5): 구독 결과를 Supabase push_subscriptions 에 저장(anon+세션).
+  const sub =
+    existing ??
+    (await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    }));
+  await saveSubscription(sub);
+  return sub;
 }

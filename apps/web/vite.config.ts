@@ -16,6 +16,8 @@ export default defineConfig({
       workbox: {
         navigateFallback: `${base}index.html`,
         globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
+        // 생성 SW 에 푸시/클릭 핸들러 포함(SW 스코프 기준 상대경로)
+        importScripts: ['push-sw.js'],
       },
       manifest: {
         name: 'Morning Brief',
