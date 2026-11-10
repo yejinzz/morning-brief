@@ -15,9 +15,12 @@ applyTheme(
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('#root 요소를 찾을 수 없습니다.');
 
+// GitHub Pages 서브경로 대응: Vite BASE_URL(예: /morning-brief/) → 라우터 basename
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 createRoot(rootEl).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <App />
     </BrowserRouter>
   </StrictMode>,
