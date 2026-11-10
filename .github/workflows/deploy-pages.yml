@@ -2,9 +2,10 @@ name: Deploy Pages
 
 # PWA(정적) → GitHub Pages. 서브경로 /morning-brief/ 로 빌드.
 # 선행: 레포 Settings → Pages → Source 를 "GitHub Actions" 로 설정.
+# 배포는 main(릴리스 브랜치)에서만. github-pages 환경이 기본 브랜치만 허용하기 때문.
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'apps/web/**'
       - '.github/workflows/deploy-pages.yml'
