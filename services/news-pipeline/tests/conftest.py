@@ -3,8 +3,34 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import UTC, datetime
 
+from mb_pipeline.contracts import Article, Category
 from mb_pipeline.sources.base import Fetcher, SourceError
+
+_BASE = datetime(2026, 11, 10, 12, 0, tzinfo=UTC)
+
+
+def make_article(
+    aid: str,
+    title: str,
+    *,
+    category: Category = Category.AI,
+    url: str | None = None,
+    hour: int = 12,
+    description: str | None = None,
+) -> Article:
+    """테스트용 Article 팩토리."""
+    return Article(
+        id=aid,
+        canonical_url=url or f"https://ex.com/{aid}",
+        source="S",
+        title=title,
+        description=description,
+        category=category,
+        published_at=_BASE.replace(hour=hour),
+        collected_at=_BASE,
+    )
 
 
 def rss(items: Iterable[tuple[str, str, str]], *, title: str = "Feed") -> str:
