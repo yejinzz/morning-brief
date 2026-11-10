@@ -1,0 +1,32 @@
+[
+  {
+    "source": "Google News",
+    "source_feed": "search:ai",
+    "title": "주요 LLM 제공사, 에이전트 도구 호출 표준 업데이트 발표",
+    "url": "https://example.com/ai/agent-tool-standard?utm_source=news",
+    "description": "에이전트 도구 호출 프로토콜의 호환성 변경이 공지되었다.",
+    "published_at": "2026-11-10T00:12:00+09:00",
+    "category": "ai",
+    "lang": "ko"
+  },
+  {
+    "source": "연합뉴스",
+    "source_feed": "economy",
+    "title": "한국은행 기준금리 동결 결정",
+    "url": "https://example.com/econ/base-rate",
+    "description": "통화정책방향 회의에서 기준금리를 현 수준으로 유지했다.",
+    "published_at": "2026-11-09T15:00:00+09:00",
+    "category": "economy",
+    "lang": "ko"
+  },
+  {
+    "source": "Hacker News",
+    "source_feed": "newest?points=100",
+    "title": "Popular web framework ships major security patch",
+    "url": "https://example.com/dev/framework-security",
+    "description": "A high-severity vulnerability was fixed in the latest release.",
+    "published_at": "2026-11-10T02:30:00+09:00",
+    "category": "dev",
+    "lang": "en"
+  }
+]

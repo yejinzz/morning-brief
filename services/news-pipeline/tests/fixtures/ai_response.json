@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "article_ref": "a1",
+      "impact": "HIGH",
+      "summary": "주요 LLM 제공사가 에이전트 도구 호출 표준의 호환성 변경을 발표했다. 기존 통합이 영향을 받을 수 있다. 마이그레이션 가이드가 함께 공지되었다.",
+      "rationale": "다수 AI 플랫폼 통합에 직접적인 호환성 영향을 주는 변화.",
+      "dev_relevance": "에이전트/도구 호출을 구현한 서비스는 클라이언트 업데이트가 필요할 수 있음.",
+      "evidence_basis": "title_desc_only",
+      "status": "analyzed"
+    },
+    {
+      "article_ref": "a2",
+      "impact": "MEDIUM",
+      "summary": "한국은행이 기준금리를 동결했다. 시장 예상과 부합한다.",
+      "rationale": "거시경제 흐름상 중요하나 즉각적 급변은 아님.",
+      "dev_relevance": "해당 없음",
+      "evidence_basis": "full",
+      "status": "analyzed"
+    },
+    {
+      "article_ref": "a3",
+      "impact": "HIGH",
+      "summary": "널리 쓰이는 웹 프레임워크가 고위험 보안 취약점을 패치했다. 최신 릴리스로 업데이트가 권장된다.",
+      "rationale": "심각한 보안 취약점으로 개발 실무에 직접적인 조치가 필요.",
+      "dev_relevance": "해당 프레임워크 사용 프로젝트는 즉시 업그레이드 권장.",
+      "evidence_basis": "title_desc_only",
+      "status": "analyzed"
+    }
+  ]
+}

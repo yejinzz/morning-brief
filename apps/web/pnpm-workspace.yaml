@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+# pnpm 10+ 설정 홈. esbuild 빌드 스크립트만 허용(Vite 의존).
+onlyBuiltDependencies:
+  - esbuild

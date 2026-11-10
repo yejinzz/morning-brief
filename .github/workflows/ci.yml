@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+# 표준 러너(ubuntu-latest)만 사용 — public 저장소 무료, larger runner 과금 방지
+jobs:
+  pipeline:
+    name: news-pipeline (python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/news-pipeline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[dev]"
+      - name: ruff
+        run: ruff check .
+      - name: mypy
+        run: mypy
+      - name: pytest
+        run: pytest -q
+      - name: dry-run (mock)
+        run: python -m mb_pipeline.run
+
+  web:
+    name: web (typescript)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: typecheck
+        run: pnpm run typecheck
+      - name: lint
+        run: pnpm run lint
+      - name: format check
+        run: pnpm run format:check
+      - name: build
+        run: pnpm run build
