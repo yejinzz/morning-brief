@@ -5,11 +5,22 @@ import type { ArticleCard, Briefing, BriefingStatus, Category, Impact } from '..
 import { CATEGORIES, type EvidenceBasis } from '../types/contracts';
 import type { BriefingsRepo } from './briefingsRepo';
 
-const URL = import.meta.env.VITE_SUPABASE_URL ?? '';
+// URL 에 경로(/rest/v1)·슬래시·공백이 섞여도 scheme+host 만 사용(PGRST125/404 방지).
+function toOrigin(u: string): string {
+  const s = u.trim();
+  try {
+    const p = new globalThis.URL(s);
+    return `${p.protocol}//${p.host}`;
+  } catch {
+    return s.replace(/\/+$/, '');
+  }
+}
+
+const BASE = toOrigin(import.meta.env.VITE_SUPABASE_URL ?? '');
 const KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 
 export function supabaseConfigured(): boolean {
-  return URL.length > 0 && KEY.length > 0;
+  return BASE.length > 0 && KEY.length > 0;
 }
 
 // 임베디드 조회 select (brief + 조인된 기사/분석)
@@ -85,7 +96,7 @@ export function mapBriefingRow(row: Row): Briefing {
 }
 
 async function pgGet(query: string): Promise<unknown[]> {
-  const res = await fetch(`${URL}/rest/v1/${query}`, {
+  const res = await fetch(`${BASE}/rest/v1/${query}`, {
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });
   if (!res.ok) throw new Error(`Supabase ${res.status}`);
