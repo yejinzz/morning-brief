@@ -7,6 +7,7 @@ HTTP 전송은 주입식이라 contract 테스트로 호출 내용을 검증(라
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from mb_pipeline.contracts import Analysis, Article, Briefing
 from mb_pipeline.push.base import PushSubscriptionData
@@ -23,13 +24,33 @@ class SupabaseJobStore:
     def __init__(self, client: PostgrestClient) -> None:
         self._c = client
 
+    # 이 시간보다 오래된 running 은 크래시로 남은 것으로 간주(배치는 수 분 내 완료)
+    STALE_MINUTES = 5
+
     def try_start(self, brief_date: str) -> bool:
         try:
             # 동일 날짜 running 1건 부분 unique → 두 번째는 409.
             self._c.insert("collection_jobs", [{"brief_date": brief_date, "status": "running"}])
             return True
         except ConflictError:
-            return False
+            # stale running(크래시 잔존) 정리 후 1회 재시도
+            threshold = (datetime.now(UTC) - timedelta(minutes=self.STALE_MINUTES)).isoformat()
+            self._c.update(
+                "collection_jobs",
+                filters={
+                    "brief_date": f"eq.{brief_date}",
+                    "status": "eq.running",
+                    "started_at": f"lt.{threshold}",
+                },
+                patch={"status": "failed", "error": "stale (auto-recovered)"},
+            )
+            try:
+                self._c.insert(
+                    "collection_jobs", [{"brief_date": brief_date, "status": "running"}]
+                )
+                return True
+            except ConflictError:
+                return False  # 최근 running 존재 → 실제 동시 실행
 
     def finish(self, brief_date: str, status: str, counts: dict[str, object]) -> None:
         self._c.update(

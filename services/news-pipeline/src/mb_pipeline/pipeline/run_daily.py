@@ -50,45 +50,50 @@ def run_daily(
 ) -> JobOutcome:
     brief_date = kst_date(now)
 
-    # 동시/중복 실행 방지
+    # 동시/중복 실행 방지(크래시로 남은 stale running 은 try_start 가 자가 복구)
     if not job_store.try_start(brief_date):
         return JobOutcome(brief_date, "skipped", detail="이미 실행 중")
 
     try:
-        collected = collect(sources, fetcher=fetcher, now=now, prior_urls=prior_urls)
-        gen = generate_briefing(
-            collected.candidates, ai_adapter, brief_date=brief_date, now=now
+        try:
+            collected = collect(sources, fetcher=fetcher, now=now, prior_urls=prior_urls)
+            gen = generate_briefing(
+                collected.candidates, ai_adapter, brief_date=brief_date, now=now
+            )
+        except AIQuotaError as exc:
+            # 유료 폴백 없이 중단. 마지막 정상 브리핑 유지(저장 안 함).
+            job_store.finish(brief_date, "failed", {"reason": "ai_quota", "error": str(exc)})
+            return JobOutcome(brief_date, "failed", detail=f"AI 한도 소진: {exc}")
+
+        # 브리핑 저장(멱등 upsert). 선정 기사의 FK 무결성을 위해 후보 기사도 함께 저장.
+        briefing_store.save(gen.briefing, gen.analyses, collected.candidates)
+
+        # 성공(ready) 시에만 발송. empty_high → 미발송(D-1).
+        push: PushSummary | None = None
+        if gen.briefing.status is BriefingStatus.READY:
+            push = send_briefing_push(
+                gen.briefing,
+                subscriptions=subscriptions,
+                deliveries=deliveries,
+                sender=push_sender,
+            )
+
+        job_store.finish(
+            brief_date,
+            "succeeded",
+            {
+                "collect": collected.stage_counts,
+                "generate": gen.stage_counts,
+                "push": vars(push) if push else None,
+            },
         )
-    except AIQuotaError as exc:
-        # 유료 폴백 없이 중단. 마지막 정상 브리핑 유지(저장 안 함).
-        job_store.finish(brief_date, "failed", {"reason": "ai_quota", "error": str(exc)})
-        return JobOutcome(brief_date, "failed", detail=f"AI 한도 소진: {exc}")
-
-    # 브리핑 저장(멱등 upsert). 선정 기사의 FK 무결성을 위해 후보 기사도 함께 저장.
-    briefing_store.save(gen.briefing, gen.analyses, collected.candidates)
-
-    # 성공(ready) 시에만 발송. empty_high → 미발송(D-1).
-    push: PushSummary | None = None
-    if gen.briefing.status is BriefingStatus.READY:
-        push = send_briefing_push(
-            gen.briefing,
-            subscriptions=subscriptions,
-            deliveries=deliveries,
-            sender=push_sender,
+        return JobOutcome(
+            brief_date,
+            "succeeded",
+            briefing_status=gen.briefing.status.value,
+            push=push,
         )
-
-    job_store.finish(
-        brief_date,
-        "succeeded",
-        {
-            "collect": collected.stage_counts,
-            "generate": gen.stage_counts,
-            "push": vars(push) if push else None,
-        },
-    )
-    return JobOutcome(
-        brief_date,
-        "succeeded",
-        briefing_status=gen.briefing.status.value,
-        push=push,
-    )
+    except Exception as exc:
+        # 예상치 못한 오류도 job 을 failed 로 마감(stuck running 방지)
+        job_store.finish(brief_date, "failed", {"reason": "error", "error": str(exc)})
+        raise
