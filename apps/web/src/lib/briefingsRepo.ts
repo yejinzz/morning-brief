@@ -1,0 +1,27 @@
+// 브리핑 데이터 접근 계층 (M3). UI 는 이 인터페이스만 의존.
+// 현재는 Mock 구현. Supabase 조회 구현은 프로젝트/클라이언트가 생기는 시점(M4/M5)에 추가.
+
+import type { Briefing } from '../types/contracts';
+import { getMockBriefing, mockAvailableDates, MOCK_LATEST_DATE } from './mockData';
+
+export interface BriefingsRepo {
+  getByDate(date: string): Promise<Briefing | null>;
+  latestDate(): Promise<string | null>;
+  availableDates(): Promise<string[]>;
+}
+
+/** 지연·네트워크를 흉내 내는 Mock 저장소. */
+class MockBriefingsRepo implements BriefingsRepo {
+  async getByDate(date: string): Promise<Briefing | null> {
+    return getMockBriefing(date);
+  }
+  async latestDate(): Promise<string | null> {
+    return MOCK_LATEST_DATE;
+  }
+  async availableDates(): Promise<string[]> {
+    return mockAvailableDates();
+  }
+}
+
+// TODO(M4/M5): SupabaseBriefingsRepo — anon 키 + 세션으로 RLS 조회(ready/empty_high 만).
+export const repo: BriefingsRepo = new MockBriefingsRepo();

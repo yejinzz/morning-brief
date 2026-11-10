@@ -1,13 +1,17 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// 모바일 우선 PWA. 매니페스트/서비스워커는 M3 에서 확장.
+// 모바일 우선 PWA. 매니페스트/서비스워커 + 오프라인 앱셸 캐시.
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallback: '/index.html',
+        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
+      },
       manifest: {
         name: 'Morning Brief',
         short_name: 'Morning Brief',
@@ -21,4 +25,10 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    css: false,
+  },
 });
