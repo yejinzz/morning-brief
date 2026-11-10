@@ -3,6 +3,7 @@
 
 import type { Briefing } from '../types/contracts';
 import { getMockBriefing, mockAvailableDates, MOCK_LATEST_DATE } from './mockData';
+import { SupabaseBriefingsRepo, supabaseConfigured } from './briefingsRepoSupabase';
 
 export interface BriefingsRepo {
   getByDate(date: string): Promise<Briefing | null>;
@@ -23,5 +24,7 @@ class MockBriefingsRepo implements BriefingsRepo {
   }
 }
 
-// TODO(M4/M5): SupabaseBriefingsRepo — anon 키 + 세션으로 RLS 조회(ready/empty_high 만).
-export const repo: BriefingsRepo = new MockBriefingsRepo();
+// 환경 구성 시 Supabase(anon 읽기), 아니면 Mock.
+export const repo: BriefingsRepo = supabaseConfigured()
+  ? new SupabaseBriefingsRepo()
+  : new MockBriefingsRepo();

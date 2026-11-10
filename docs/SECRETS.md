@@ -10,18 +10,22 @@
 
 ## 분류
 
-| 변수 | 분류 | 저장 위치 |
+> Supabase 신규 API 키: **publishable**(=구 anon, 공개) / **secret**(=구 service_role, 서버 전용).
+
+| 변수(GitHub Actions Secret 이름) | 분류 | 사용처 |
 |---|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | 🔴 서버 전용 | Actions Secret |
-| `GEMINI_API_KEY` | 🔴 서버 전용 | Actions Secret |
-| `VAPID_PRIVATE_KEY` | 🔴 서버 전용 | Actions Secret |
-| `VAPID_SUBJECT` | 🔴 서버 전용 | Actions Secret |
-| `DATA_GO_KR_KEY` | 🔴 서버 전용(선택) | Actions Secret |
-| `VITE_SUPABASE_URL` / `SUPABASE_URL` | 🟢 공개 가능 | 빌드 변수 |
-| `VITE_SUPABASE_ANON_KEY` | 🟢 공개 가능(RLS 전제) | 빌드 변수 |
-| `VITE_VAPID_PUBLIC_KEY` | 🟢 공개 가능 | 빌드 변수 |
+| `SUPABASE_SECRET_KEY` (`sb_secret_...`) | 🔴 서버 전용 | 배치 쓰기(RLS 우회) |
+| `GEMINI_API_KEY` | 🔴 서버 전용 | 배치 AI |
+| `VAPID_PRIVATE_KEY` | 🔴 서버 전용 | 배치 푸시 발송 |
+| `VAPID_SUBJECT` | 🔴 서버 전용 | 배치 푸시 |
+| `DATA_GO_KR_KEY` | 🔴 서버 전용(선택) | 배치 수집 |
+| `SUPABASE_URL` | 🟢 공개 가능 | 공용(URL) |
+| `SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`) | 🟢 공개 가능(RLS 전제) | 클라이언트 빌드 |
+| `VAPID_PUBLIC_KEY` | 🟢 공개 가능 | 클라이언트 빌드 |
+
+> 빌드 시 공개 값은 `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` / `VITE_VAPID_PUBLIC_KEY` 환경변수로 주입된다(배포 워크플로가 위 Secret → VITE_ 로 매핑).
 
 ## 노출 방지 체크 (배포 전 필수, AC-8 / O-4)
-- 웹 빌드 산출물(`apps/web/dist`)에 `SERVICE_ROLE` / `GEMINI` / `VAPID_PRIVATE` 문자열이 **없어야** 한다.
+- 웹 빌드 산출물(`apps/web/dist`)에 `sb_secret` / `GEMINI` / `VAPID_PRIVATE` 문자열이 **없어야** 한다.
 - `.gitignore`가 `.env*`(단, `.env.example` 제외)·`*.pem`·`*.key`를 포함한다.
 - 커밋 전 `git diff --staged`로 비밀 유입 여부 확인.

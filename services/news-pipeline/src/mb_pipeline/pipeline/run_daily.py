@@ -64,8 +64,8 @@ def run_daily(
         job_store.finish(brief_date, "failed", {"reason": "ai_quota", "error": str(exc)})
         return JobOutcome(brief_date, "failed", detail=f"AI 한도 소진: {exc}")
 
-    # 브리핑 저장(멱등 upsert)
-    briefing_store.save(gen.briefing, gen.analyses)
+    # 브리핑 저장(멱등 upsert). 선정 기사의 FK 무결성을 위해 후보 기사도 함께 저장.
+    briefing_store.save(gen.briefing, gen.analyses, collected.candidates)
 
     # 성공(ready) 시에만 발송. empty_high → 미발송(D-1).
     push: PushSummary | None = None

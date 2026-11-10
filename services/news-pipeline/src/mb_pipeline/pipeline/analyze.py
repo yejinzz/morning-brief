@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import uuid
 from collections import defaultdict
 from datetime import datetime
 
@@ -25,6 +26,13 @@ from mb_pipeline.contracts import (
     Impact,
 )
 
+# 결정적 analysis id(= DB uuid). 동일 기사·날짜·모델 → 동일 id → 멱등 upsert.
+_ANALYSIS_NS = uuid.UUID("b2c3d4e5-6f70-5182-93a4-b5c6d7e8f901")
+
+
+def analysis_id(article_id: str, brief_date: str, model: str) -> str:
+    return str(uuid.uuid5(_ANALYSIS_NS, f"{article_id}:{brief_date}:{model}"))
+
 
 def _to_analysis(
     *, article_id: str, brief_date: str, model: str, now: datetime,
@@ -32,7 +40,7 @@ def _to_analysis(
     dev_relevance: str | None, evidence: EvidenceBasis, status: AnalysisStatus,
 ) -> Analysis:
     return Analysis(
-        id=f"{article_id}:{brief_date}:{model}",
+        id=analysis_id(article_id, brief_date, model),
         article_id=article_id,
         brief_date=brief_date,
         model=model,

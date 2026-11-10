@@ -7,11 +7,13 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from mb_pipeline.contracts import Analysis, Briefing
+from mb_pipeline.contracts import Analysis, Article, Briefing
 
 
 class BriefingStore(Protocol):
-    def save(self, briefing: Briefing, analyses: list[Analysis]) -> None: ...
+    def save(
+        self, briefing: Briefing, analyses: list[Analysis], articles: list[Article]
+    ) -> None: ...
     def get(self, brief_date: str) -> Briefing | None: ...
 
 
@@ -27,10 +29,14 @@ class InMemoryBriefingStore:
     def __init__(self) -> None:
         self._briefings: dict[str, Briefing] = {}
         self._analyses: dict[str, list[Analysis]] = {}
+        self._articles: dict[str, list[Article]] = {}
 
-    def save(self, briefing: Briefing, analyses: list[Analysis]) -> None:
+    def save(
+        self, briefing: Briefing, analyses: list[Analysis], articles: list[Article]
+    ) -> None:
         self._briefings[briefing.brief_date] = briefing  # upsert(멱등)
         self._analyses[briefing.brief_date] = analyses
+        self._articles[briefing.brief_date] = articles
 
     def get(self, brief_date: str) -> Briefing | None:
         return self._briefings.get(brief_date)

@@ -21,12 +21,12 @@ jobs:
       run:
         working-directory: services/news-pipeline
     env:
-      # mock: 실 RSS + Mock AI + Mock 푸시(키·비용 없이 흐름 검증).
-      # live(M5): Gemini + Supabase + 실 Web Push. 아래 Secret 사용.
-      MB_MODE: ${{ vars.MB_MODE || 'mock' }}
+      # 저장/푸시: Supabase+VAPID Secret 이 있으면 live, 없으면 인메모리/Mock.
+      # AI: MB_AI=mock(기본, 비용0) | gemini(실분석). vars 로 전환 가능.
+      MB_AI: ${{ vars.MB_AI || 'mock' }}
       INPUT_DATE: ${{ github.event.inputs.date }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
       VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
