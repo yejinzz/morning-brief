@@ -55,8 +55,15 @@ class PostgrestClient:
             h.update(extra)
         return h
 
+    def _origin(self) -> str:
+        # URL 에 경로(/rest/v1 등)·슬래시·공백이 섞여도 scheme+host 만 사용(PGRST125 방지).
+        p = urllib.parse.urlsplit(self.url.strip())
+        if p.scheme and p.netloc:
+            return f"{p.scheme}://{p.netloc}"
+        return self.url.strip().rstrip("/")
+
     def _rest(self, table: str, query: str = "") -> str:
-        base = f"{self.url.rstrip('/')}/rest/v1/{table}"
+        base = f"{self._origin()}/rest/v1/{table}"
         return f"{base}?{query}" if query else base
 
     def insert(self, table: str, rows: list[dict[str, Any]]) -> None:

@@ -45,6 +45,30 @@ def _client(t: FakeTransport) -> PostgrestClient:
     return PostgrestClient("https://x.supabase.co", "sb_secret_test", transport=t)
 
 
+def test_url_normalized_to_origin() -> None:
+    # URL 에 경로/슬래시가 섞여도 /rest/v1/<table> 로 정규화(PGRST125 방지)
+    t = FakeTransport()
+    for messy in (
+        "https://x.supabase.co/rest/v1",
+        "https://x.supabase.co/",
+        "  https://x.supabase.co  ",
+    ):
+        t.calls.clear()
+        PostgrestClient(messy, "k", transport=t).insert("collection_jobs", [{"a": 1}])
+        assert t.calls[0][0] == "POST"
+    # 마지막 호출의 실제 URL 확인
+    captured: list[str] = []
+    t2_url: list[str] = []
+
+    def cap(method, url, headers, body):
+        t2_url.append(url)
+        return (201, "")
+
+    PostgrestClient("https://x.supabase.co/rest/v1/", "k", transport=cap).insert("t", [{}])
+    assert t2_url[0] == "https://x.supabase.co/rest/v1/t"
+    assert captured == []
+
+
 def test_job_try_start_ok_and_conflict() -> None:
     t = FakeTransport()
     assert SupabaseJobStore(_client(t)).try_start("2026-11-10") is True
