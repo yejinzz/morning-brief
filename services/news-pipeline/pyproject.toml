@@ -7,6 +7,7 @@ dependencies = [
     "pydantic>=2.7",
     "jsonschema>=4.22",
     "feedparser>=6.0",
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]
@@ -15,6 +16,10 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "types-jsonschema>=4.22",
+]
+# 실 Web Push 발송(운영 환경). CI/테스트는 MockPushSender 라 불필요.
+push = [
+    "pywebpush>=1.14",
 ]
 
 [build-system]
@@ -35,5 +40,5 @@ mypy_path = "src"
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["feedparser"]
+module = ["feedparser", "pywebpush"]
 ignore_missing_imports = true

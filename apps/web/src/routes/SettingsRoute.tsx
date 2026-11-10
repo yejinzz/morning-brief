@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme, type Theme } from '../lib/theme';
+import { pushConfigured, subscribeToPush } from '../lib/push';
 
 const THEMES: { key: Theme; label: string }[] = [
   { key: 'system', label: '시스템' },
@@ -24,7 +25,14 @@ export function SettingsRoute() {
     if (typeof Notification === 'undefined') return;
     const result = await Notification.requestPermission();
     setPermission(result);
-    // 실제 pushManager.subscribe + 서버 구독 저장은 M4(VAPID) 에서 연결.
+    if (result === 'granted' && pushConfigured()) {
+      // VAPID 공개키가 구성된 경우 구독 시도(서버 저장은 M5 Supabase 연동).
+      try {
+        await subscribeToPush();
+      } catch {
+        /* 구독 실패는 조용히 무시(권한만 유지) */
+      }
+    }
   }
 
   return (
