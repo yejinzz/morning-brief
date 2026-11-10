@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.7",
     "jsonschema>=4.22",
+    "feedparser>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -32,3 +33,7 @@ python_version = "3.12"
 packages = ["mb_pipeline"]
 mypy_path = "src"
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["feedparser"]
+ignore_missing_imports = true

@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class Category(StrEnum):
@@ -86,7 +86,7 @@ class RawArticle(BaseModel):
     source: str
     source_feed: str | None = None
     title: str
-    url: HttpUrl
+    url: str  # http(s) URL. 소스 파서가 scheme 를 검증한다.
     description: str | None = None
     published_at: datetime | None = None
     category: Category
