@@ -1,6 +1,8 @@
 # 07 · 인프라 · 무료 운영 (Infrastructure)
 
 > Morning Brief · 설계 문서 7/8 · 작성일 2026-11-10 · 상태: 초안(승인 대기)
+>
+> ⚠️ **M5 구현 반영**: 호스팅 Cloudflare Pages→**GitHub Pages**(`deploy-pages.yml`, `main` 브랜치 배포, 서브경로 `/morning-brief/`+404 SPA 폴백), Supabase 키 anon/service_role→**publishable/secret**. 실제 비밀키·운영은 [`README`](../README.md)·[`13-runbook`](13-runbook.md) 참조.
 > 모든 무료 조건은 2026-11-10 공식 문서 기준. **무료 플랜 정책 변경으로 영구 0원은 보장 불가** — 위험은 §5 및 `08-risks.md`.
 
 ---

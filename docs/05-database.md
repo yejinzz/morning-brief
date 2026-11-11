@@ -1,6 +1,8 @@
 # 05 · 데이터베이스 설계 (Database)
 
 > Morning Brief · 설계 문서 5/8 · 작성일 2026-11-10 · 상태: 초안(승인 대기)
+>
+> ⚠️ **M5 구현 반영**: 인증 D-3 '최소 로그인'→**'로그인 없음'** — RLS는 **anon이 `ready/empty_high`만 읽기**, `push_subscriptions`는 anon 자가 등록(INSERT/UPDATE), 그 외 secret key 전용. 쓰기는 Supabase **secret key**(=구 service_role). 실제 `0002_rls.sql` 및 [`13-runbook`](13-runbook.md) 참조.
 
 엔진은 `03-tech-stack.md`의 추천에 따라 **Supabase(PostgreSQL)**를 전제로 설계한다(무료 검증 완료: 500MB, RLS 포함, 카드 불필요). 단일 사용자 MVP에 맞춰 불필요한 테이블은 합치고, 확장 가능성(멀티 유저)은 `user_id` 보존으로 열어둔다.
 

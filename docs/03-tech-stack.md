@@ -1,6 +1,8 @@
 # 03 · 기술 스택 (Tech Stack)
 
 > Morning Brief · 설계 문서 3/8 · 작성일 2026-11-10 · 상태: 초안(승인 대기)
+>
+> ⚠️ **M5 구현 반영**: 호스팅 Cloudflare Pages→**GitHub Pages**, Supabase 키 anon/service_role→**publishable/secret**, 인증 D-3 '최소 로그인'→**'로그인 없음(anon이 ready만 읽기)'**. 실제 구성·운영은 [`README`](../README.md)·[`13-runbook`](13-runbook.md) 참조.
 > 무료 조건은 2026-11-10 공식 문서 기준 검증. 무료 플랜 정책은 변동될 수 있으므로 **영구 0원 보장 불가**(위험은 `08-risks.md`).
 
 ---

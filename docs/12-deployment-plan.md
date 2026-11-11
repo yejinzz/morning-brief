@@ -1,6 +1,8 @@
 # 12 · 배포 · 운영 · 복구 플랜 (Deployment)
 
 > Morning Brief · 구현계획 4/4 · 작성일 2026-11-10 · 상태: 초안(승인 대기)
+>
+> ⚠️ **M5 구현 반영**: 호스팅 Cloudflare Pages→**GitHub Pages**, Supabase 키 anon/service_role→**publishable/secret**(`SUPABASE_SECRET_KEY`/`SUPABASE_PUBLISHABLE_KEY`), 인증 '로그인 없음'. 실제 배포·운영 절차는 [`README`](../README.md)·[`13-runbook`](13-runbook.md) 가 최신 기준.
 > 무료 배포·환경 변수·스케줄러·푸시·운영·복구 절차. 전제: 모든 계정 **결제 수단 미등록**.
 
 ---

@@ -1,6 +1,8 @@
 # 02 · 아키텍처 설계 (Architecture)
 
 > Morning Brief · 설계 문서 2/8 · 작성일 2026-11-10 · 상태: 초안(승인 대기)
+>
+> ⚠️ **M5 구현 반영**: 호스팅 Cloudflare Pages→**GitHub Pages**, Supabase 키 anon/service_role→**publishable/secret**, 인증 D-3 '최소 로그인'→**'로그인 없음(anon이 ready만 읽기)'**. 실제 구성·운영은 [`README`](../README.md)·[`13-runbook`](13-runbook.md) 참조.
 
 구성도·시퀀스·배치/PWA 역할·장애 흐름을 정의한다. 스택 확정 근거는 `03-tech-stack.md`, 무료 운영 검증은 `07-infrastructure.md`.
 
