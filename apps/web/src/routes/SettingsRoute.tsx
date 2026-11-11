@@ -1,4 +1,4 @@
-// 설정 화면 (M3). 테마 · 알림(권한/설치 안내, 구독은 M4) · 정보.
+// 설정 화면: 테마 · 알림 · 정보. 뉴모피즘.
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -15,6 +15,17 @@ function isStandalone(): boolean {
   return typeof matchMedia !== 'undefined' && matchMedia('(display-mode: standalone)').matches;
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-3 px-1 text-xs font-semibold uppercase tracking-widest text-mute-light dark:text-mute-dark">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export function SettingsRoute() {
   const { theme, setTheme } = useTheme();
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(
@@ -26,7 +37,6 @@ export function SettingsRoute() {
     const result = await Notification.requestPermission();
     setPermission(result);
     if (result === 'granted' && pushConfigured()) {
-      // VAPID 공개키가 구성된 경우 구독 시도(서버 저장은 M5 Supabase 연동).
       try {
         await subscribeToPush();
       } catch {
@@ -36,68 +46,69 @@ export function SettingsRoute() {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-center gap-2">
+    <div className="space-y-7">
+      <header className="flex items-center gap-3">
         <Link
           to="/"
           aria-label="뒤로"
-          className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="neu-btn flex h-11 w-11 items-center justify-center text-lg text-mute-light dark:text-mute-dark"
         >
           ←
         </Link>
-        <h1 className="text-lg font-bold">설정</h1>
+        <h1 className="text-xl font-bold tracking-tight">설정</h1>
       </header>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500">테마</h2>
-        <div className="flex gap-2">
+      <Section title="테마">
+        <div className="flex gap-2.5">
           {THEMES.map(({ key, label }) => (
             <button
               key={key}
               type="button"
               onClick={() => setTheme(key)}
               aria-pressed={theme === key}
-              className={`rounded-full px-3 py-1.5 text-sm ${
+              className={`rounded-full px-4 py-2 text-sm transition-shadow duration-150 ${
                 theme === key
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                  ? 'neu-inset font-semibold text-high'
+                  : 'neu-raised-sm text-mute-light dark:text-mute-dark'
               }`}
             >
               {label}
             </button>
           ))}
         </div>
-      </section>
+      </Section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500">알림</h2>
+      <Section title="알림">
         {permission === 'unsupported' ? (
-          <p className="text-sm text-slate-500">이 브라우저는 알림을 지원하지 않습니다.</p>
+          <p className="neu-inset rounded-neu px-4 py-3 text-sm text-mute-light dark:text-mute-dark">
+            이 브라우저는 알림을 지원하지 않아요.
+          </p>
         ) : permission === 'granted' ? (
-          <p className="text-sm text-slate-500">알림이 허용되었습니다. (구독 연결은 다음 단계)</p>
+          <p className="neu-inset rounded-neu px-4 py-3 text-sm text-mute-light dark:text-mute-dark">
+            알림이 켜져 있어요. 매일 아침 브리핑을 보내드릴게요.
+          </p>
         ) : (
           <button
             type="button"
             onClick={requestPush}
-            className="rounded bg-blue-600 px-3 py-2 text-sm text-white"
+            className="neu-btn w-full px-4 py-3.5 text-sm font-semibold text-high"
           >
             알림 받기
           </button>
         )}
         {!isStandalone() && (
-          <p className="mt-2 text-xs text-slate-400">
-            iOS에서는 공유 → “홈 화면에 추가”로 설치한 뒤에만 푸시를 받을 수 있습니다 (iOS 16.4+).
+          <p className="mt-3 px-1 text-xs leading-relaxed text-mute-light dark:text-mute-dark">
+            iOS는 공유 → “홈 화면에 추가”로 설치한 뒤에만 알림을 받을 수 있어요 (iOS 16.4+).
           </p>
         )}
-      </section>
+      </Section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500">정보</h2>
-        <p className="text-xs text-slate-400">
-          Morning Brief · 월 운영비 0원 목표. 정확한 07:00 실행은 무료 플랫폼 제약으로 보장되지
-          않습니다.
+      <Section title="정보">
+        <p className="neu-inset rounded-neu px-4 py-3 text-xs leading-relaxed text-mute-light dark:text-mute-dark">
+          Morning Brief — 매일 아침 AI가 선별하는 뉴스 브리핑. 월 운영비 0원을 목표로 하며, 정확한
+          07:00 실행은 무료 플랫폼 특성상 보장되지 않아요.
         </p>
-      </section>
+      </Section>
     </div>
   );
 }

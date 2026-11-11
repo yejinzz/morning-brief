@@ -24,7 +24,7 @@ describe('ArticleCard', () => {
     render(<ArticleCard card={card} read={false} onToggleRead={() => {}} />);
     expect(screen.getByText('보안 패치 공개')).toBeInTheDocument();
     expect(screen.getByText('요약 내용')).toBeInTheDocument();
-    expect(screen.getByText(/HIGH 근거/)).toBeInTheDocument();
+    expect(screen.getByText(/근거 내용/)).toBeInTheDocument();
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', 'https://example.com/x');
   });

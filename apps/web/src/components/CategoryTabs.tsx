@@ -11,8 +11,8 @@ interface Props {
 
 export function CategoryTabs({ active, counts, onSelect }: Props) {
   return (
-    <nav className="-mx-4 overflow-x-auto px-4" aria-label="카테고리">
-      <ul className="flex gap-1 whitespace-nowrap">
+    <nav className="-mx-5 overflow-x-auto px-5 py-1" aria-label="카테고리">
+      <ul className="flex gap-2.5 whitespace-nowrap">
         {TABS.map(({ key, label }) => {
           const count = key === 'all' ? undefined : counts[key];
           const isActive = key === active;
@@ -22,15 +22,15 @@ export function CategoryTabs({ active, counts, onSelect }: Props) {
                 type="button"
                 onClick={() => onSelect(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`rounded-full px-3 py-1.5 text-sm ${
+                className={`rounded-full px-4 py-2 text-sm transition-shadow duration-150 ${
                   isActive
-                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    ? 'neu-inset font-semibold text-high'
+                    : 'neu-raised-sm text-mute-light dark:text-mute-dark'
                 }`}
               >
                 {label}
                 {count !== undefined && count > 0 && (
-                  <span className="ml-1 text-xs opacity-80">{count}</span>
+                  <span className="ml-1.5 text-xs font-semibold text-high">{count}</span>
                 )}
               </button>
             </li>

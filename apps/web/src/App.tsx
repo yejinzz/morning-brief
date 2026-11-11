@@ -4,7 +4,7 @@ import { SettingsRoute } from './routes/SettingsRoute';
 
 export function App() {
   return (
-    <div className="mx-auto min-h-full max-w-reader px-4 py-4">
+    <div className="mx-auto min-h-full max-w-reader px-5 py-7">
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/d/:date" element={<HomeRoute />} />

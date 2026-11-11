@@ -35,7 +35,7 @@ export function HomeRoute() {
   const visible = filterByTab(briefing.articles, tab);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {!online && <OfflineBanner generatedAt={briefing.generated_at} />}
       <BriefingHeader briefing={briefing} />
       {briefing.headline && <OneLiner text={briefing.headline} />}
@@ -49,7 +49,7 @@ export function HomeRoute() {
       ) : visible.length === 0 ? (
         <CategoryEmptyView />
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-5">
           {visible.map((card) => (
             <li key={card.id}>
               <ArticleCard card={card} read={isRead(card.id)} onToggleRead={toggle} />

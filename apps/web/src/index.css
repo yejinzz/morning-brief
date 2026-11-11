@@ -13,11 +13,44 @@ body,
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
-}
-
-/* 빠른 읽기 우선: 기본 본문 가독 크기 */
-body {
+  @apply bg-base-light text-ink-light antialiased dark:bg-base-dark dark:text-ink-dark;
   font-size: 16px;
   line-height: 1.6;
+  /* 뉴모피즘은 그림자가 생명 — 폰트도 부드럽게 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 공용 뉴모피즘 표면/컨트롤 (컴포넌트에서 조합) */
+@layer components {
+  .neu-raised {
+    @apply bg-base-light shadow-neu dark:bg-base-dark dark:shadow-neu-dark;
+  }
+  .neu-raised-sm {
+    @apply bg-base-light shadow-neu-sm dark:bg-base-dark dark:shadow-neu-dark-sm;
+  }
+  .neu-inset {
+    @apply bg-base-light shadow-neu-in dark:bg-base-dark dark:shadow-neu-dark-in;
+  }
+  /* 누를 수 있는 컨트롤: 기본 솟음, 눌림/활성 시 inset */
+  .neu-btn {
+    @apply neu-raised-sm rounded-full transition-shadow duration-150;
+  }
+  .neu-btn:active {
+    @apply shadow-neu-in-sm dark:shadow-neu-dark-in-sm;
+  }
+}
+
+/* 접근성: 포커스 가시성 + 모션 최소화 존중 */
+:focus-visible {
+  outline: 2px solid theme('colors.accent');
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

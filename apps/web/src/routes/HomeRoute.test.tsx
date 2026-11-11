@@ -37,15 +37,11 @@ describe('HomeRoute', () => {
 
   it('HIGH 0건 날짜는 empty_high 상태를 보여준다', async () => {
     renderAt('/d/2026-11-09');
-    await waitFor(() =>
-      expect(screen.getByText(/HIGH로 분류된 뉴스가 없습니다/)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/챙길 만한 뉴스가 없어요/)).toBeInTheDocument());
   });
 
   it('존재하지 않는 날짜는 없음 상태를 보여준다', async () => {
     renderAt('/d/2020-01-01');
-    await waitFor(() =>
-      expect(screen.getByText(/해당 날짜의 브리핑이 없습니다/)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/브리핑이 없어요/)).toBeInTheDocument());
   });
 });
