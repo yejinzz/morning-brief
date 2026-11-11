@@ -12,7 +12,8 @@ from datetime import datetime
 
 from mb_pipeline.ai.base import (
     AIAdapter,
-    AIResponseError,
+    AIError,
+    AIQuotaError,
     AnalysisInput,
 )
 from mb_pipeline.ai.limits import UsageTracker
@@ -85,14 +86,20 @@ def analyze_candidates(
         tracker.before_request(estimated_tokens=estimate_tokens(inputs))
 
         result = None
+        last_err: Exception | None = None
         for _ in range(retries + 1):
             try:
                 result = adapter.analyze(cat, inputs)
                 break
-            except AIResponseError:
+            except AIQuotaError:
+                raise  # 무료 한도 소진 → 전체 중단(유료 폴백 없음)
+            except AIError as exc:
+                # 503/타임아웃/잘못된 응답 등 → 재시도 후 카테고리 격리(배치는 계속)
+                last_err = exc
                 continue
         if result is None:
-            # 카테고리 전체 격리(다른 카테고리는 계속)
+            # 카테고리 전체 격리(다른 카테고리는 계속). AI 장애가 배치를 중단시키지 않음.
+            print(f"[analyze] 카테고리 '{cat.value}' 분석 실패(격리): {last_err}")
             tracker.add_failure()
             analyses.extend(_failed(a.id, brief_date, adapter.model, now) for a in items)
             continue

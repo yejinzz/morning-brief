@@ -59,7 +59,7 @@ _GEMINI_SCHEMA: dict[str, Any] = {
 
 class GeminiAdapter:
     def __init__(
-        self, api_key: str, *, model: str = "gemini-2.5-flash-lite", timeout: float = 30.0
+        self, api_key: str, *, model: str = "gemini-2.5-flash-lite", timeout: float = 60.0
     ):
         if not api_key:
             raise AIError("GEMINI_API_KEY 가 비어 있음")
