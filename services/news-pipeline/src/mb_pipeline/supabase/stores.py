@@ -20,6 +20,31 @@ def _briefing_article_id(brief_date: str, article_id: str) -> str:
     return str(uuid.uuid5(_BA_NS, f"{brief_date}:{article_id}"))
 
 
+def cleanup_retention(
+    client: PostgrestClient,
+    now: datetime,
+    *,
+    briefings_days: int = 180,
+    jobs_days: int = 90,
+    deliveries_days: int = 90,
+    articles_days: int = 180,
+) -> None:
+    """데이터 보관 정리 (docs/05 §6). FK 안전 순서: 브리핑→이력→기사.
+
+    브리핑 삭제가 briefing_articles 를 CASCADE 로 지우므로, 그 뒤 오래된 기사는 미참조가 되어
+    안전하게 삭제된다. (비선정 기사의 조기(30일) 정리는 DB 함수로 추후 강화 가능)
+    """
+    brief_cut = (now - timedelta(days=briefings_days)).strftime("%Y-%m-%d")
+    jobs_cut = (now - timedelta(days=jobs_days)).isoformat()
+    deliv_cut = (now - timedelta(days=deliveries_days)).isoformat()
+    art_cut = (now - timedelta(days=articles_days)).isoformat()
+
+    client.delete("daily_briefings", filters={"brief_date": f"lt.{brief_cut}"})
+    client.delete("collection_jobs", filters={"started_at": f"lt.{jobs_cut}"})
+    client.delete("notification_deliveries", filters={"sent_at": f"lt.{deliv_cut}"})
+    client.delete("news_articles", filters={"collected_at": f"lt.{art_cut}"})
+
+
 class SupabaseJobStore:
     def __init__(self, client: PostgrestClient) -> None:
         self._c = client

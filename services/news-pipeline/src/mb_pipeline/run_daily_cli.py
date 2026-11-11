@@ -32,6 +32,8 @@ from mb_pipeline.push.stores import (
 )
 from mb_pipeline.sources.base import http_fetcher
 from mb_pipeline.sources.registry import all_sources
+from mb_pipeline.supabase.client import PostgrestClient
+from mb_pipeline.supabase.stores import cleanup_retention
 
 
 def _ai_adapter() -> AIAdapter:
@@ -52,11 +54,12 @@ def _push_sender() -> PushSender:
     return MockPushSender()
 
 
-def _stores() -> tuple[BriefingStore, JobStore, SubscriptionStore, DeliveryStore, bool]:
+def _stores() -> tuple[
+    BriefingStore, JobStore, SubscriptionStore, DeliveryStore, PostgrestClient | None
+]:
     url = os.environ.get("SUPABASE_URL")
     secret = os.environ.get("SUPABASE_SECRET_KEY")
     if url and secret:
-        from mb_pipeline.supabase.client import PostgrestClient
         from mb_pipeline.supabase.stores import (
             SupabaseBriefingStore,
             SupabaseDeliveryStore,
@@ -70,7 +73,7 @@ def _stores() -> tuple[BriefingStore, JobStore, SubscriptionStore, DeliveryStore
             SupabaseJobStore(client),
             SupabaseSubscriptionStore(client),
             SupabaseDeliveryStore(client),
-            True,
+            client,
         )
     # 인메모리(로컬 스모크): 데모 구독 1건으로 푸시 경로도 통과
     demo = PushSubscriptionData(
@@ -81,13 +84,13 @@ def _stores() -> tuple[BriefingStore, JobStore, SubscriptionStore, DeliveryStore
         InMemoryJobStore(),
         InMemorySubscriptionStore([demo]),
         InMemoryDeliveryStore(),
-        False,
+        None,
     )
 
 
 def main() -> int:
     now = datetime.now(UTC)
-    briefing_store, job_store, subscriptions, deliveries, live_db = _stores()
+    briefing_store, job_store, subscriptions, deliveries, client = _stores()
     sender = _push_sender()
     ai = _ai_adapter()
 
@@ -102,8 +105,16 @@ def main() -> int:
         subscriptions=subscriptions,
         deliveries=deliveries,
     )
+
+    # 데이터 보관 정리(live 전용, 베스트에포트 — 실패해도 배치는 성공 처리)
+    if client is not None:
+        try:
+            cleanup_retention(client, now)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[run_daily] 보관 정리 건너뜀: {exc}")
+
     mode = (
-        f"db={'supabase' if live_db else 'memory'} "
+        f"db={'supabase' if client else 'memory'} "
         f"ai={type(ai).__name__} push={type(sender).__name__}"
     )
     print(

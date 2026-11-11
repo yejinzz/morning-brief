@@ -37,6 +37,9 @@ class WebPushSender:
             if status in (404, 410):
                 raise PushGoneError(f"구독 만료: {status}") from exc
             raise PushError(f"푸시 실패: {status}") from exc
+        except ValueError as exc:
+            # 잘못된 키/형식(base64 디코딩 실패 등) → 영구 무효 → 정리(deactivate)
+            raise PushGoneError(f"잘못된 구독(키 형식): {exc}") from exc
         except Exception as exc:
-            # 잘못된 키 등 pywebpush 내부 오류도 격리(배치 전체 중단 방지)
+            # 그 외 예기치 못한 오류는 격리(배치 전체 중단 방지), 재시도 대상
             raise PushError(f"푸시 발송 오류: {exc}") from exc

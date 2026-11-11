@@ -22,6 +22,7 @@ from mb_pipeline.supabase.stores import (
     SupabaseDeliveryStore,
     SupabaseJobStore,
     SupabaseSubscriptionStore,
+    cleanup_retention,
 )
 
 NOW = datetime(2026, 11, 10, tzinfo=UTC)
@@ -142,6 +143,16 @@ def test_subscription_list_active_maps_rows() -> None:
     subs = SupabaseSubscriptionStore(_client(t)).list_active()
     assert [s.id for s in subs] == ["s1"]
     assert subs[0].endpoint == "https://p/1"
+
+
+def test_cleanup_retention_deletes_old_rows() -> None:
+    t = FakeTransport()
+    cleanup_retention(_client(t), NOW)
+    deleted = t.tables("DELETE")
+    assert "daily_briefings" in deleted  # 브리핑 먼저(briefing_articles CASCADE)
+    assert "collection_jobs" in deleted
+    assert "notification_deliveries" in deleted
+    assert "news_articles" in deleted  # 브리핑 삭제 후 미참조 기사 삭제
 
 
 def test_delivery_already_sent() -> None:
