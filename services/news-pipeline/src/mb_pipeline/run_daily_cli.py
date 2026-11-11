@@ -40,7 +40,8 @@ def _ai_adapter() -> AIAdapter:
     if os.environ.get("MB_AI") == "gemini" and os.environ.get("GEMINI_API_KEY"):
         from mb_pipeline.ai.gemini import GeminiAdapter
 
-        return GeminiAdapter(os.environ["GEMINI_API_KEY"])
+        model = os.environ.get("MB_GEMINI_MODEL", "gemini-2.5-flash-lite")
+        return GeminiAdapter(os.environ["GEMINI_API_KEY"], model=model)
     return MockAIAdapter()
 
 

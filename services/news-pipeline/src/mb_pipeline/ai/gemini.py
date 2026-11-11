@@ -82,9 +82,30 @@ class GeminiAdapter:
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
                 raise AIQuotaError("Gemini 무료 한도 초과(429)") from exc
+            if exc.code == 404:
+                # 모델명 불일치 → 사용 가능 모델 목록을 알려 진단 용이화
+                avail = self._list_models()
+                raise AIError(
+                    f"Gemini 404 model='{self.model}'. generateContent 가능 모델: {avail}"
+                ) from exc
             raise AIError(f"Gemini HTTP {exc.code}") from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             raise AIError(f"Gemini 요청 실패: {exc}") from exc
+
+    def _list_models(self) -> list[str]:
+        """generateContent 를 지원하는 모델 id 목록(진단용)."""
+        url = "https://generativelanguage.googleapis.com/v1beta/models"
+        req = urllib.request.Request(url, headers={"x-goog-api-key": self._key})
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:  # noqa: S310
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception:  # noqa: BLE001
+            return ["(목록 조회 실패)"]
+        out: list[str] = []
+        for m in data.get("models", []):
+            if "generateContent" in m.get("supportedGenerationMethods", []):
+                out.append(str(m.get("name", "")).removeprefix("models/"))
+        return out
 
     def analyze(self, category: Category, items: list[AnalysisInput]) -> AIResult:
         body = {
