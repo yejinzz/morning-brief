@@ -30,12 +30,17 @@ curl -s "https://<project>.supabase.co/rest/v1/daily_briefings?select=brief_date
   -H "apikey: <publishable>" -H "Authorization: Bearer <publishable>"
 ```
 
-## 3. AI를 실제 Gemini로 전환
+## 3. AI를 실제 Gemini로 전환 (현재 라이브)
 
-기본은 Mock 분석(요약이 "…(모의)"). 실제 요약을 원하면:
-1. 레포 Settings → Secrets and variables → **Variables** → `MB_AI` = `gemini` 추가.
-2. `GEMINI_API_KEY` Secret이 등록돼 있어야 함(무료 키, 결제 비활성).
-3. 배치 재실행. 무료 한도 소진 시 자동 중단(유료 전환 없음) — 그날은 분석 실패 격리/empty로 처리.
+레포 Variables: `MB_AI=gemini`, `MB_GEMINI_MODEL=gemini-flash-lite-latest`. `GEMINI_API_KEY` Secret 필요(무료, 결제 비활성).
+
+⚠️ **모델명 주의(중요)**:
+- 버전 지정명(`gemini-2.5-flash`, `gemini-2.5-flash-lite` 등)은 v1beta generateContent에서 **404**(목록엔 있어도 호출 불가).
+- **alias만 호출됨**: `gemini-flash-lite-latest`(권장, 저비용·고RPD), `gemini-flash-latest`, `gemini-pro-latest`.
+- 404 발생 시 배치 로그에 **사용 가능 모델 목록**이 출력되므로 거기서 유효한 alias 선택.
+- 무료 티어 혼잡 시 **503/timeout** 가능 → 코드가 재시도(3회, 60s)하고, 그래도 실패하면 **카테고리 격리**로 degrade(배치 안 죽음, 해당 카테고리만 분석 미완료).
+- 무료 한도 소진(429) → 전체 중단(유료 폴백 없음), 마지막 정상 브리핑 유지.
+- Mock로 되돌리려면 `MB_AI` 변수를 `mock`으로.
 
 ## 4. 푸시 운영
 
