@@ -24,6 +24,7 @@ jobs:
       # 저장/푸시: Supabase+VAPID Secret 이 있으면 live, 없으면 인메모리/Mock.
       # AI: MB_AI=mock(기본, 비용0) | gemini(실분석). vars 로 전환 가능.
       MB_AI: ${{ vars.MB_AI || 'mock' }}
+      MB_GEMINI_MODEL: ${{ vars.MB_GEMINI_MODEL }}
       INPUT_DATE: ${{ github.event.inputs.date }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
