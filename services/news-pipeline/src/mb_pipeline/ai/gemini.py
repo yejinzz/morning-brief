@@ -10,6 +10,7 @@ Gemini responseSchema 는 OpenAPI 서브셋이라 additionalProperties 를 지�
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from typing import Any
@@ -66,31 +67,43 @@ class GeminiAdapter:
         self.model = model
         self._timeout = timeout
 
+    # 일시적 서버 오류 → 백오프 재시도
+    _TRANSIENT = (500, 502, 503, 504)
+    _MAX_RETRY = 3
+
     def _post(self, body: dict[str, Any]) -> dict[str, Any]:
         url = _ENDPOINT.format(model=self.model)
         data = json.dumps(body).encode("utf-8")
-        req = urllib.request.Request(
-            url,
-            data=data,
-            headers={"Content-Type": "application/json", "x-goog-api-key": self._key},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:  # noqa: S310
-                parsed: dict[str, Any] = json.loads(resp.read().decode("utf-8"))
-                return parsed
-        except urllib.error.HTTPError as exc:
-            if exc.code == 429:
-                raise AIQuotaError("Gemini 무료 한도 초과(429)") from exc
-            if exc.code == 404:
-                # 모델명 불일치 → 사용 가능 모델 목록을 알려 진단 용이화
-                avail = self._list_models()
-                raise AIError(
-                    f"Gemini 404 model='{self.model}'. generateContent 가능 모델: {avail}"
-                ) from exc
-            raise AIError(f"Gemini HTTP {exc.code}") from exc
-        except (urllib.error.URLError, TimeoutError) as exc:
-            raise AIError(f"Gemini 요청 실패: {exc}") from exc
+        last: Exception | None = None
+        for attempt in range(self._MAX_RETRY):
+            req = urllib.request.Request(
+                url,
+                data=data,
+                headers={"Content-Type": "application/json", "x-goog-api-key": self._key},
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=self._timeout) as resp:  # noqa: S310
+                    parsed: dict[str, Any] = json.loads(resp.read().decode("utf-8"))
+                    return parsed
+            except urllib.error.HTTPError as exc:
+                if exc.code == 429:
+                    raise AIQuotaError("Gemini 무료 한도 초과(429)") from exc
+                if exc.code == 404:
+                    avail = self._list_models()  # 모델명 불일치 → 진단
+                    raise AIError(
+                        f"Gemini 404 model='{self.model}'. generateContent 가능: {avail}"
+                    ) from exc
+                if exc.code in self._TRANSIENT:
+                    last = exc
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                raise AIError(f"Gemini HTTP {exc.code}") from exc
+            except (urllib.error.URLError, TimeoutError) as exc:
+                last = exc
+                time.sleep(2 * (attempt + 1))
+                continue
+        raise AIError(f"Gemini 재시도 후 실패: {last}")
 
     def _list_models(self) -> list[str]:
         """generateContent 를 지원하는 모델 id 목록(진단용)."""
