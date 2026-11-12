@@ -18,6 +18,10 @@ class BriefingStore(Protocol):
 
 
 class JobStore(Protocol):
+    def already_succeeded(self, brief_date: str) -> bool:
+        """해당 날짜가 이미 성공 완료됐으면 True(예약 다중 실행 시 재작업 스킵용)."""
+        ...
+
     def try_start(self, brief_date: str) -> bool:
         """실행 시작 등록. 이미 running 이면 False(중복 실행 방지)."""
         ...
@@ -45,7 +49,11 @@ class InMemoryBriefingStore:
 class InMemoryJobStore:
     def __init__(self) -> None:
         self._running: set[str] = set()
+        self._succeeded: set[str] = set()
         self.records: list[dict[str, object]] = []
+
+    def already_succeeded(self, brief_date: str) -> bool:
+        return brief_date in self._succeeded
 
     def try_start(self, brief_date: str) -> bool:
         if brief_date in self._running:
@@ -55,4 +63,6 @@ class InMemoryJobStore:
 
     def finish(self, brief_date: str, status: str, counts: dict[str, object]) -> None:
         self._running.discard(brief_date)
+        if status == "succeeded":
+            self._succeeded.add(brief_date)
         self.records.append({"brief_date": brief_date, "status": status, **counts})

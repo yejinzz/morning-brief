@@ -6,7 +6,8 @@
 규칙:
 - empty_high(HIGH 0건) → 저장하되 **푸시 미발송**(D-1).
 - 무료 한도 소진(AIQuotaError) → job=failed, 푸시 없음, 마지막 정상 브리핑 유지.
-- 동일 날짜 재실행 → 멱등(이미 running 이면 skip).
+- 동일 날짜 재실행 → 멱등: 이미 성공했으면 skip(예약 크론 다중화 대비), running 이면 skip.
+  단 force=True(수동 실행)면 성공 이력 무시하고 강제 재생성.
 """
 
 from __future__ import annotations
@@ -47,8 +48,13 @@ def run_daily(
     subscriptions: SubscriptionStore,
     deliveries: DeliveryStore,
     prior_urls: set[str] | None = None,
+    force: bool = False,
 ) -> JobOutcome:
     brief_date = kst_date(now)
+
+    # 이미 오늘 성공 완료 → 재작업 스킵(예약 크론 다중화 대비). force 면 강제 재생성(수동 실행).
+    if not force and job_store.already_succeeded(brief_date):
+        return JobOutcome(brief_date, "skipped", detail="이미 완료됨")
 
     # 동시/중복 실행 방지(크래시로 남은 stale running 은 try_start 가 자가 복구)
     if not job_store.try_start(brief_date):

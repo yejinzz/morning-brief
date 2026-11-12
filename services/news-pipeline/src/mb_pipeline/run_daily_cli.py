@@ -95,6 +95,9 @@ def main() -> int:
     sender = _push_sender()
     ai = _ai_adapter()
 
+    # MB_FORCE=1 → 성공 이력 무시하고 강제 재생성(수동 실행). 예약 실행은 미설정 → 중복 스킵.
+    force = os.environ.get("MB_FORCE") == "1"
+
     outcome = run_daily(
         now=now,
         sources=all_sources(),
@@ -105,6 +108,7 @@ def main() -> int:
         job_store=job_store,
         subscriptions=subscriptions,
         deliveries=deliveries,
+        force=force,
     )
 
     # 데이터 보관 정리(live 전용, 베스트에포트 — 실패해도 배치는 성공 처리)

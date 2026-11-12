@@ -52,6 +52,14 @@ class SupabaseJobStore:
     # 이 시간보다 오래된 running 은 크래시로 남은 것으로 간주(배치는 수 분 내 완료)
     STALE_MINUTES = 5
 
+    def already_succeeded(self, brief_date: str) -> bool:
+        # 해당 날짜 성공 이력 1건이라도 있으면 True → 예약 다중 실행 시 재작업 스킵.
+        rows = self._c.select(
+            "collection_jobs",
+            query=f"brief_date=eq.{brief_date}&status=eq.succeeded&select=id&limit=1",
+        )
+        return len(rows) > 0
+
     def try_start(self, brief_date: str) -> bool:
         try:
             # 동일 날짜 running 1건 부분 unique → 두 번째는 409.

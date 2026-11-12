@@ -76,11 +76,19 @@ def test_concurrent_run_skipped() -> None:
     assert out.status == "skipped"
 
 
-def test_rerun_same_date_idempotent_push() -> None:
-    # 저장소를 공유해 두 번 실행 → 두 번째는 푸시 중복 방지(skip)
+def test_rerun_same_date_skipped_when_succeeded() -> None:
+    # 예약 크론 다중화: 이미 성공한 날짜를 재실행하면 재작업 없이 스킵(RSS·AI 재호출 안 함).
     deps = _deps([("보안 취약점 발견", "https://ex.com/x", RECENT)])
     run_daily(**deps)
-    # job 은 finish 로 running 해제됨 → 재실행 가능. 하지만 delivery 멱등으로 재발송 안 함.
     out2 = run_daily(**deps)
+    assert out2.status == "skipped"
+    assert out2.push is None
+
+
+def test_force_rerun_regenerates_and_dedups_push() -> None:
+    # 수동 실행(force): 성공 이력 무시하고 재생성하되, delivery 멱등으로 재발송은 안 함(skip).
+    deps = _deps([("보안 취약점 발견", "https://ex.com/x", RECENT)])
+    run_daily(**deps)
+    out2 = run_daily(**deps, force=True)
     assert out2.status == "succeeded"
     assert out2.push is not None and out2.push.sent == 0 and out2.push.skipped == 1

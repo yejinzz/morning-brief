@@ -80,6 +80,15 @@ def test_job_try_start_ok_and_conflict() -> None:
     assert SupabaseJobStore(_client(t2)).try_start("2026-11-10") is False
 
 
+def test_job_already_succeeded() -> None:
+    t = FakeTransport()
+    store = SupabaseJobStore(_client(t))
+    t.responses[("GET", "collection_jobs")] = (200, "[]")
+    assert store.already_succeeded("2026-11-10") is False
+    t.responses[("GET", "collection_jobs")] = (200, json.dumps([{"id": "j1"}]))
+    assert store.already_succeeded("2026-11-10") is True
+
+
 def _briefing() -> tuple[Briefing, list[Analysis], list]:
     art = make_article("a1", "보안 패치", category=Category.DEV)
     an = Analysis(
