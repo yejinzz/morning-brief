@@ -2,9 +2,14 @@ name: Daily Brief
 
 # KST 07:07 목표(UTC 22:07). 정각 회피로 GitHub 고부하 지연 완화.
 # ⚠ 무료 cron 은 정확한 07:00 을 보장하지 않음(지연·누락 가능, docs/07 §2).
+# 누락 대비로 ~1시간 창에 4회 예약 → 첫 성공만 실제 작업, 나머지는 already_succeeded 로 즉시 스킵.
+# (수동 workflow_dispatch 는 MB_FORCE=1 로 성공 이력 무시하고 강제 재생성)
 on:
   schedule:
-    - cron: '7 22 * * *'
+    - cron: '7 22 * * *' # KST 07:07
+    - cron: '22 22 * * *' # KST 07:22
+    - cron: '42 22 * * *' # KST 07:42
+    - cron: '12 23 * * *' # KST 08:12
   workflow_dispatch:
     inputs:
       date:
@@ -25,6 +30,8 @@ jobs:
       # AI: MB_AI=mock(기본, 비용0) | gemini(실분석). vars 로 전환 가능.
       MB_AI: ${{ vars.MB_AI || 'mock' }}
       MB_GEMINI_MODEL: ${{ vars.MB_GEMINI_MODEL }}
+      # 수동 실행만 강제 재생성. 예약 실행은 미설정 → 이미 성공한 날짜면 스킵.
+      MB_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
       INPUT_DATE: ${{ github.event.inputs.date }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
