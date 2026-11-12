@@ -12,6 +12,7 @@ export interface ArticleCard {
   category: Category;
   title: string;
   summary?: string | null;
+  keywords?: string[];
   rationale?: string | null;
   dev_relevance?: string | null;
   source: string;

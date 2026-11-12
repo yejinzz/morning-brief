@@ -9,6 +9,7 @@ const card: Card = {
   category: 'dev',
   title: '보안 패치 공개',
   summary: '요약 내용',
+  keywords: ['원격 코드 실행', '즉시 업그레이드'],
   rationale: '근거 내용',
   source: 'Hacker News',
   published_at: '2026-11-10T02:30:00+09:00',
@@ -27,6 +28,12 @@ describe('ArticleCard', () => {
     expect(screen.getByText(/근거 내용/)).toBeInTheDocument();
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', 'https://example.com/x');
+  });
+
+  it('키워드를 칩으로 렌더한다', () => {
+    render(<ArticleCard card={card} read={false} onToggleRead={() => {}} />);
+    expect(screen.getByText('#원격 코드 실행')).toBeInTheDocument();
+    expect(screen.getByText('#즉시 업그레이드')).toBeInTheDocument();
   });
 
   it('읽음 버튼 클릭 시 토글 핸들러를 호출한다', async () => {

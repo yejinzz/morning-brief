@@ -36,6 +36,16 @@ export function ArticleCard({ card, read, onToggleRead }: Props) {
         </p>
       )}
 
+      {card.keywords && card.keywords.length > 0 && (
+        <ul className="mt-2.5 flex flex-wrap gap-1.5">
+          {card.keywords.map((kw) => (
+            <li key={kw}>
+              <Chip>#{kw}</Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {card.rationale && (
         <p className="mt-2.5 text-xs leading-relaxed text-mute-light dark:text-mute-dark">
           <span className="font-semibold text-accent">근거</span> {card.rationale}

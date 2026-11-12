@@ -42,6 +42,7 @@ const row = {
       },
       news_analyses: {
         summary: '요약1',
+        keywords: ['키워드A', '키워드B'],
         rationale: '근거1',
         dev_relevance: '해당 없음',
         impact: 'HIGH',
@@ -59,6 +60,7 @@ describe('mapBriefingRow', () => {
     // ai 가 dev 보다 앞(CATEGORIES 순서: domestic,economy,ai,dev,tech)
     expect(b.articles.map((c) => c.id)).toEqual(['a1', 'a2']);
     expect(b.articles[0].summary).toBe('요약1');
+    expect(b.articles[0].keywords).toEqual(['키워드A', '키워드B']);
     expect(b.articles[0].evidence_basis).toBe('full');
   });
 

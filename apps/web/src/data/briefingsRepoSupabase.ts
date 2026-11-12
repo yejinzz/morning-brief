@@ -18,7 +18,7 @@ const SELECT =
   'brief_date,headline,collected_count,high_count,est_read_minutes,status,generated_at,' +
   'briefing_articles(display_order,is_high,category,' +
   'news_articles(id,title,source,canonical_url,published_at),' +
-  'news_analyses(summary,rationale,dev_relevance,impact,evidence_basis))';
+  'news_analyses(summary,keywords,rationale,dev_relevance,impact,evidence_basis))';
 
 interface Row {
   brief_date: string;
@@ -41,6 +41,7 @@ interface Row {
     } | null;
     news_analyses: {
       summary: string | null;
+      keywords?: string[] | null;
       rationale: string | null;
       dev_relevance: string | null;
       impact: string;
@@ -58,6 +59,7 @@ export function mapBriefingRow(row: Row): Briefing {
       category: ba.category as Category,
       title: ba.news_articles!.title,
       summary: ba.news_analyses?.summary ?? null,
+      keywords: ba.news_analyses?.keywords ?? [],
       rationale: ba.news_analyses?.rationale ?? null,
       dev_relevance: ba.news_analyses?.dev_relevance ?? null,
       source: ba.news_articles!.source,
