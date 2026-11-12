@@ -16,6 +16,7 @@ from mb_pipeline.contracts import Analysis, Article, Briefing
 from mb_pipeline.pipeline import prefilter as prefilter_mod
 from mb_pipeline.pipeline.analyze import analyze_candidates
 from mb_pipeline.pipeline.briefing import build_briefing
+from mb_pipeline.pipeline.dedup_llm import dedup_high_llm
 from mb_pipeline.pipeline.select import select
 
 
@@ -47,9 +48,13 @@ def generate_briefing(
         filtered, adapter, tracker, brief_date=brief_date, now=now, retries=retries
     )
 
-    # ⑥ 분석 후 선정 · ⑦ HIGH 만 브리핑
+    # ⑥ 교차언어 중복 제거(HIGH 후보, best-effort) → 대표 1건만 선정에 노출
     articles_by_id = {a.id: a for a in filtered}
-    selected = select(analyses, articles_by_id)
+    drop_ids = dedup_high_llm(analyses, articles_by_id, adapter)
+    select_input = [a for a in analyses if a.article_id not in drop_ids] if drop_ids else analyses
+
+    # ⑦ 분석 후 선정 · ⑧ HIGH 만 브리핑
+    selected = select(select_input, articles_by_id)
     briefing = build_briefing(
         brief_date, collected_count=collected_count, selected=selected, now=now
     )
@@ -61,6 +66,7 @@ def generate_briefing(
             "collected": collected_count,
             "prefiltered_out": dropped,
             "analyzed": len(analyses),
+            "dedup_dropped": len(drop_ids),
             "selected_high": briefing.high_count,
             "status": briefing.status.value,
             "usage": tracker.snapshot(),

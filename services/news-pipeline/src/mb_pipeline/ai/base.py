@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from mb_pipeline.contracts import Category
@@ -29,6 +29,23 @@ class AIResultItem:
     dev_relevance: str
     evidence_basis: str  # full/title_desc_only
     status: str  # analyzed/held/conflict
+    keywords: list[str] = field(default_factory=list)  # 핵심 용어·인물·수치
+
+
+@dataclass(frozen=True)
+class DedupInput:
+    ref: str  # 기사 식별자(= Article.id)
+    title: str
+    source: str
+    category: Category
+
+
+@dataclass(frozen=True)
+class DedupGroup:
+    """같은 실제 사건으로 묶인 기사 그룹. representative 1건 유지, 나머지는 중복."""
+
+    representative_ref: str
+    duplicate_refs: list[str]
 
 
 @dataclass(frozen=True)
@@ -55,4 +72,12 @@ class AIAdapter(Protocol):
 
     def analyze(self, category: Category, items: list[AnalysisInput]) -> AIResult:
         """한 카테고리 후보 묶음을 분석. 실패 시 AIError 계열 raise."""
+        ...
+
+    def dedup_high(self, items: list[DedupInput]) -> list[DedupGroup]:
+        """같은 실제 사건(언어·카테고리 무관)끼리 그룹핑. 중복 그룹만 반환(단건 제외).
+
+        교차언어(엔비디아=Nvidia) 중복까지 LLM 이해로 판별. 호출 측은 best-effort 로
+        다루며(실패 시 스킵), 중복이 없으면 빈 리스트를 반환한다.
+        """
         ...

@@ -35,6 +35,13 @@ def test_batch_analyzes_all_with_mock() -> None:
     assert all(a.status is AnalysisStatus.ANALYZED for a in out)
 
 
+def test_keywords_mapped_from_adapter() -> None:
+    arts = [make_article("1", "심각한 보안 취약점 발견", category=Category.DEV)]
+    out = _run(arts, MockAIAdapter())
+    # Mock 은 제목 앞 토큰을 키워드로 반환 → Analysis.keywords 로 매핑
+    assert out[0].keywords == ["심각한", "보안", "취약점"]
+
+
 def test_quota_error_propagates_and_stops() -> None:
     arts = [make_article("1", "아무 기사나")]
     with pytest.raises(AIQuotaError):

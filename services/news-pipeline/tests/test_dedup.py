@@ -50,13 +50,15 @@ def test_similar_titles_grouped_representative_kept() -> None:
     assert res.kept[0].dedup_group is not None
 
 
-def test_different_category_not_grouped() -> None:
+def test_cross_category_same_event_grouped() -> None:
+    # 같은 사건이 여러 피드의 다른 카테고리로 들어와도 묶는다(교차-카테고리 dedup).
     arts = [
         _art("1", "https://a.com/x", "보안 취약점 패치 공개", cat=Category.DEV),
         _art("2", "https://b.com/y", "보안 취약점 패치 공개", cat=Category.TECH),
     ]
     res = deduplicate(arts, sim_threshold=0.5)
-    assert len(res.kept) == 2  # 카테고리가 달라 동일 사건으로 묶지 않음
+    assert len(res.kept) == 1
+    assert res.kept[0].dedup_group is not None
 
 
 def test_prior_briefing_urls_excluded() -> None:

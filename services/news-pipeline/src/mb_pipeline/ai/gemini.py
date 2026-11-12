@@ -22,8 +22,16 @@ from mb_pipeline.ai.base import (
     AIResult,
     AIResultItem,
     AnalysisInput,
+    DedupGroup,
+    DedupInput,
 )
-from mb_pipeline.ai.prompt import INSTRUCTION, build_contents, estimate_tokens
+from mb_pipeline.ai.prompt import (
+    DEDUP_INSTRUCTION,
+    INSTRUCTION,
+    build_contents,
+    build_dedup_contents,
+    estimate_tokens,
+)
 from mb_pipeline.ai_schema import validate_ai_response
 from mb_pipeline.contracts import Category
 
@@ -41,19 +49,39 @@ _GEMINI_SCHEMA: dict[str, Any] = {
                     "article_ref": {"type": "STRING"},
                     "impact": {"type": "STRING", "enum": ["HIGH", "MEDIUM", "LOW"]},
                     "summary": {"type": "STRING"},
+                    "keywords": {"type": "ARRAY", "items": {"type": "STRING"}},
                     "rationale": {"type": "STRING"},
                     "dev_relevance": {"type": "STRING"},
                     "evidence_basis": {"type": "STRING", "enum": ["full", "title_desc_only"]},
                     "status": {"type": "STRING", "enum": ["analyzed", "held", "conflict"]},
                 },
                 "required": [
-                    "article_ref", "impact", "summary",
+                    "article_ref", "impact", "summary", "keywords",
                     "rationale", "evidence_basis", "status",
                 ],
             },
         }
     },
     "required": ["results"],
+}
+
+# 교차언어 중복 판별용 responseSchema
+_GEMINI_DEDUP_SCHEMA: dict[str, Any] = {
+    "type": "OBJECT",
+    "properties": {
+        "groups": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "representative_ref": {"type": "STRING"},
+                    "duplicate_refs": {"type": "ARRAY", "items": {"type": "STRING"}},
+                },
+                "required": ["representative_ref", "duplicate_refs"],
+            },
+        }
+    },
+    "required": ["groups"],
 }
 
 
@@ -146,6 +174,7 @@ class GeminiAdapter:
                 ref=r["article_ref"],
                 impact=r["impact"],
                 summary=r["summary"],
+                keywords=[str(k) for k in r.get("keywords", [])],
                 rationale=r["rationale"],
                 dev_relevance=r.get("dev_relevance", "해당 없음"),
                 evidence_basis=r["evidence_basis"],
@@ -156,3 +185,31 @@ class GeminiAdapter:
         usage = resp.get("usageMetadata", {})
         tokens = int(usage.get("totalTokenCount", estimate_tokens(items)))
         return AIResult(items=items_out, model=self.model, tokens=tokens)
+
+    def dedup_high(self, items: list[DedupInput]) -> list[DedupGroup]:
+        if len(items) < 2:
+            return []
+        body = {
+            "systemInstruction": {"parts": [{"text": DEDUP_INSTRUCTION}]},
+            "contents": [{"role": "user", "parts": [{"text": build_dedup_contents(items)}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseSchema": _GEMINI_DEDUP_SCHEMA,
+                "temperature": 0.0,
+            },
+        }
+        resp = self._post(body)
+        try:
+            text = resp["candidates"][0]["content"]["parts"][0]["text"]
+            payload = json.loads(text)
+        except (KeyError, IndexError, json.JSONDecodeError) as exc:
+            raise AIResponseError(f"Gemini dedup 응답 파싱 실패: {exc}") from exc
+
+        valid_refs = {it.ref for it in items}
+        groups: list[DedupGroup] = []
+        for g in payload.get("groups", []):
+            rep = g.get("representative_ref")
+            dups = [str(r) for r in g.get("duplicate_refs", []) if r in valid_refs and r != rep]
+            if rep in valid_refs and dups:
+                groups.append(DedupGroup(representative_ref=rep, duplicate_refs=dups))
+        return groups

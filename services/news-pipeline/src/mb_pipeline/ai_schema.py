@@ -36,6 +36,11 @@ AI_RESPONSE_SCHEMA: dict[str, Any] = {
                         "type": "string",
                         "description": "3~4문장(약 3~4줄) 독자적 요약(원문 복붙 금지)",
                     },
+                    "keywords": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "핵심 용어·인물·수치 3~5개(명사 위주, 짧게)",
+                    },
                     "rationale": {
                         "type": "string",
                         "description": "영향도 판단 근거 1~2문장",

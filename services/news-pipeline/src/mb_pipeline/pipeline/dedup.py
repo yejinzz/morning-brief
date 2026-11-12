@@ -2,7 +2,11 @@
 
 1차: canonical_url 완전 일치 제거.
 2차: 제목 유사도(토큰 자카드) → 동일 사건 dedup_group, 대표 1건 유지.
+     카테고리 무관(같은 사건이 여러 피드의 다른 카테고리로 들어오므로 교차 비교).
 3차: 이전 브리핑에 선정된 canonical_url 과 대조 → 재노출 제거.
+
+주의: 토큰 자카드는 같은 언어 내 중복에만 유효하다(엔비디아↔Nvidia 교차언어는 못 잡음).
+교차언어 중복은 분석 후 LLM 단계(pipeline/dedup_llm.py)에서 추가로 제거한다.
 """
 
 from __future__ import annotations
@@ -53,7 +57,7 @@ def deduplicate(
     articles: list[Article],
     *,
     prior_urls: set[str] | None = None,
-    sim_threshold: float = 0.6,
+    sim_threshold: float = 0.55,
 ) -> DedupResult:
     prior_urls = prior_urls or set()
     result = DedupResult(kept=[])
@@ -76,7 +80,7 @@ def deduplicate(
         seen_urls.add(a.canonical_url)
         unique.append(a)
 
-    # 2차: 제목 유사도 클러스터(카테고리 내에서만 동일 사건 취급)
+    # 2차: 제목 유사도 클러스터(카테고리 무관 — 같은 사건이 여러 피드로 들어옴)
     groups: list[list[Article]] = []
     token_cache: dict[str, set[str]] = {}
     for a in unique:
@@ -85,7 +89,7 @@ def deduplicate(
         placed = False
         for group in groups:
             rep = group[0]
-            if rep.category == a.category and jaccard(token_cache[rep.id], toks) >= sim_threshold:
+            if jaccard(token_cache[rep.id], toks) >= sim_threshold:
                 group.append(a)
                 placed = True
                 break

@@ -39,6 +39,7 @@ def _to_analysis(
     *, article_id: str, brief_date: str, model: str, now: datetime,
     impact: Impact, summary: str | None, rationale: str | None,
     dev_relevance: str | None, evidence: EvidenceBasis, status: AnalysisStatus,
+    keywords: list[str] | None = None,
 ) -> Analysis:
     return Analysis(
         id=analysis_id(article_id, brief_date, model),
@@ -47,6 +48,7 @@ def _to_analysis(
         model=model,
         impact=impact,
         summary=summary,
+        keywords=keywords or [],
         rationale=rationale,
         dev_relevance=dev_relevance,
         evidence_basis=evidence,
@@ -116,7 +118,7 @@ def analyze_candidates(
                     article_id=a.id, brief_date=brief_date, model=adapter.model, now=now,
                     impact=Impact(r.impact), summary=r.summary, rationale=r.rationale,
                     dev_relevance=r.dev_relevance, evidence=EvidenceBasis(r.evidence_basis),
-                    status=AnalysisStatus(r.status),
+                    status=AnalysisStatus(r.status), keywords=r.keywords,
                 )
             )
     return analyses

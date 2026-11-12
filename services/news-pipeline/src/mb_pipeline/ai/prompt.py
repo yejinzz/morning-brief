@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mb_pipeline.ai.base import AnalysisInput
+from mb_pipeline.ai.base import AnalysisInput, DedupInput
 from mb_pipeline.contracts import CATEGORY_LABELS, Category
 
 INSTRUCTION = """\
@@ -18,11 +18,35 @@ INSTRUCTION = """\
 - 제공된 제목·설명 범위 밖의 사실을 만들어내지 마라(환각 금지).
 - 제목·설명만으로 판단했으면 evidence_basis="title_desc_only", 그 외 "full".
 - 검증 불가/모호하면 status="held", 내용이 상충하면 "conflict", 정상 분석은 "analyzed".
-- summary 는 3~4문장(약 3~4줄)으로 핵심 사실·배경·영향을 담은 독자적 요약(원문 복붙 금지).
+- summary 는 3~4문장 독자적 요약. **구체적 사실 위주**로 써라:
+  누가·무엇을·언제·수치(금액·비율·기한 등)·고유명사를 반드시 담아라.
+  "중대한 영향을 미친다" 같은 **막연한 상투어·일반론은 금지**.
+  제공된 정보에 수치가 없으면 지어내지 말고 사실만 쓴다.
+- keywords 는 핵심 용어·인물·회사·수치 3~5개(짧은 명사구). 요약의 뼈대가 되는 단어를 뽑아라.
 - rationale 은 영향도 판단 근거 1~2문장. dev_relevance 는 개발 실무 관련성(없으면 "해당 없음").
 - HIGH 를 수량 때문에 억지로 만들지 마라. 없으면 없는 대로 둔다.
 - article_ref 는 입력의 ref 를 그대로 사용한다. 모든 입력 기사에 대해 하나씩 결과를 낸다.
 """
+
+DEDUP_INSTRUCTION = """\
+당신은 뉴스 중복 판별기다. 아래 기사들 중 "같은 실제 사건·발표"를 다루는 것끼리 그룹으로 묶어라.
+
+규칙:
+- 언어가 달라도 같은 사건이면 같은 그룹이다(예: '엔비디아'=Nvidia, '젠슨 황'=Jensen Huang).
+- 확실히 같은 사건일 때만 묶어라. 주제만 비슷하고 사건이 다르면 묶지 마라.
+- 각 그룹에서 가장 포괄적이고 정보량 많은 기사 1건을 representative_ref 로 고르고,
+  나머지 ref 를 duplicate_refs 에 넣어라.
+- 중복이 없는 기사는 어떤 그룹에도 넣지 마라. groups 에는 2건 이상 묶인 그룹만 담는다.
+- ref 는 입력의 ref 를 그대로 사용한다.
+"""
+
+
+def build_dedup_contents(items: list[DedupInput]) -> str:
+    lines: list[str] = []
+    for it in items:
+        label = CATEGORY_LABELS[it.category]
+        lines.append(f"- ref={it.ref} [{label}] ({it.source}) 제목: {it.title}")
+    return "\n".join(lines)
 
 
 def build_contents(category: Category, items: list[AnalysisInput]) -> str:

@@ -6,12 +6,16 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+
 from mb_pipeline.ai.base import (
     AIQuotaError,
     AIResponseError,
     AIResult,
     AIResultItem,
     AnalysisInput,
+    DedupGroup,
+    DedupInput,
 )
 from mb_pipeline.contracts import Category
 
@@ -52,6 +56,7 @@ class MockAIAdapter:
                     ref=it.ref,
                     impact=impact,
                     summary=f"{it.title} 관련 요약(모의).",
+                    keywords=it.title.split()[:3],
                     rationale="모의 판단 근거.",
                     dev_relevance="해당 없음" if category is not Category.DEV else "개발 관련.",
                     evidence_basis="title_desc_only",
@@ -59,3 +64,14 @@ class MockAIAdapter:
                 )
             )
         return AIResult(items=out, model=self.model, tokens=len(items) * 50)
+
+    def dedup_high(self, items: list[DedupInput]) -> list[DedupGroup]:
+        # 모의: 정규화 제목(소문자·공백 단일화)이 완전히 같은 것끼리 그룹(결정적).
+        by_norm: dict[str, list[str]] = defaultdict(list)
+        for it in items:
+            by_norm[" ".join(it.title.lower().split())].append(it.ref)
+        groups: list[DedupGroup] = []
+        for refs in by_norm.values():
+            if len(refs) >= 2:
+                groups.append(DedupGroup(representative_ref=refs[0], duplicate_refs=refs[1:]))
+        return groups

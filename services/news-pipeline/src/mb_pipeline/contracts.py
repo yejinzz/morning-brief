@@ -117,7 +117,8 @@ class Analysis(BaseModel):
     brief_date: str  # KST ISO date (YYYY-MM-DD)
     model: str
     impact: Impact
-    summary: str | None = None  # 3문장 이내 독자적 요약
+    summary: str | None = None  # 3~4문장 독자적 요약(구체 사실·수치·고유명사)
+    keywords: list[str] = Field(default_factory=list)  # 핵심 용어·인물·수치 3~5개
     rationale: str | None = None
     dev_relevance: str | None = None
     evidence_basis: EvidenceBasis
