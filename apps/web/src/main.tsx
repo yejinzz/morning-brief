@@ -2,7 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
-import { applyTheme } from './lib/theme';
+import { applyTheme } from '@/hooks/useTheme';
+import 'overlayscrollbars/overlayscrollbars.css';
 import './index.css';
 
 // 초기 테마 적용(플래시 최소화)

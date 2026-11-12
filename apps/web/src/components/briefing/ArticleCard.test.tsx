@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ArticleCard } from './ArticleCard';
-import type { ArticleCard as Card } from '../types/contracts';
+import type { ArticleCard as Card } from '@/types';
 
 const card: Card = {
   id: 'a1',

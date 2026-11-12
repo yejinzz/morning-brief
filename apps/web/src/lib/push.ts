@@ -1,6 +1,6 @@
 // 클라이언트 푸시 구독 (M5). VAPID 공개키로 구독 → Supabase push_subscriptions 에 저장(anon INSERT).
 
-import { SUPABASE_URL, supabaseConfigured, supabaseHeaders } from './supabaseEnv';
+import { SUPABASE_URL, supabaseConfigured, supabaseHeaders } from './env';
 
 /** VAPID 공개키(base64url) → Uint8Array(applicationServerKey). */
 export function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {

@@ -1,10 +1,10 @@
 // 브리핑 데이터 접근 계층 (M3). UI 는 이 인터페이스만 의존.
-// 현재는 Mock 구현. Supabase 조회 구현은 프로젝트/클라이언트가 생기는 시점(M4/M5)에 추가.
+// 환경이 구성되면 Supabase(anon 읽기), 아니면 Mock.
 
-import type { Briefing } from '../types/contracts';
+import type { Briefing } from '@/types';
+import { supabaseConfigured } from '@/lib/env';
 import { getMockBriefing, mockAvailableDates, MOCK_LATEST_DATE } from './mockData';
 import { SupabaseBriefingsRepo } from './briefingsRepoSupabase';
-import { supabaseConfigured } from './supabaseEnv';
 
 export interface BriefingsRepo {
   getByDate(date: string): Promise<Briefing | null>;

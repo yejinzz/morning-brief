@@ -1,8 +1,8 @@
 // 브리핑 로딩 훅 (M3). 로딩/오류/로드 상태 관리.
 
 import { useEffect, useState } from 'react';
-import type { Briefing } from '../types/contracts';
-import { repo } from './briefingsRepo';
+import type { Briefing } from '@/types';
+import { repo } from '@/data/briefingsRepo';
 
 export type LoadState =
   | { status: 'loading' }
@@ -30,21 +30,4 @@ export function useBriefing(date: string | null): LoadState {
   }, [date]);
 
   return state;
-}
-
-export function useOnline(): boolean {
-  const [online, setOnline] = useState(() =>
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  );
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    addEventListener('online', on);
-    addEventListener('offline', off);
-    return () => {
-      removeEventListener('online', on);
-      removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
 }

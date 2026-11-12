@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ArticleCard } from '../types/contracts';
+import type { ArticleCard } from '@/types';
 import { categoryCounts, filterByTab } from './tabs';
 
 function card(id: string, category: ArticleCard['category']): ArticleCard {

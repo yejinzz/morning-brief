@@ -2,21 +2,24 @@
 
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArticleCard } from '../components/ArticleCard';
-import { CategoryTabs } from '../components/CategoryTabs';
-import { BriefingHeader, OneLiner, StatsBar } from '../components/BriefingParts';
 import {
+  ArticleCard,
+  BriefingHeader,
   CategoryEmptyView,
+  CategoryTabs,
   EmptyHighView,
   ErrorView,
   GeneratingView,
   LoadingView,
   NotFoundView,
   OfflineBanner,
-} from '../components/StateViews';
-import { useBriefing, useOnline } from '../lib/useBriefing';
-import { useReadState } from '../lib/readState';
-import { categoryCounts, filterByTab, type Tab } from '../lib/tabs';
+  OneLiner,
+  StatsBar,
+} from '@/components/briefing';
+import { useBriefing } from '@/hooks/useBriefing';
+import { useOnline } from '@/hooks/useOnline';
+import { useReadState } from '@/hooks/useReadState';
+import { categoryCounts, filterByTab, type Tab } from '@/lib/tabs';
 
 export function HomeRoute() {
   const { date } = useParams();

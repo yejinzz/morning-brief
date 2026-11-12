@@ -1,17 +1,6 @@
-// 공유 데이터 계약 (M0) — Python 쪽 services/news-pipeline/src/mb_pipeline/contracts.py 와 미러.
-// 한쪽을 바꾸면 반드시 다른 쪽도 함께 갱신한다.
-// 설계 근거: docs/05-database.md, docs/04-news-pipeline.md §6.3
+// 브리핑 데이터 계약. Python 쪽 mb_pipeline/contracts.py 와 미러(한쪽 변경 시 함께 갱신).
 
-export const CATEGORIES = ['domestic', 'economy', 'ai', 'dev', 'tech'] as const;
-export type Category = (typeof CATEGORIES)[number];
-
-export const CATEGORY_LABELS: Record<Category, string> = {
-  domestic: '국내 시사',
-  economy: '경제·국제',
-  ai: 'AI·LLM',
-  dev: '개발·인프라',
-  tech: '기타 테크',
-};
+import type { Category } from './category';
 
 export type Impact = 'HIGH' | 'MEDIUM' | 'LOW';
 export type EvidenceBasis = 'full' | 'title_desc_only';

@@ -1,6 +1,6 @@
 // 탭/필터 로직 (M3). 순수 함수 → 테스트 용이.
 
-import { CATEGORIES, type ArticleCard, type Category } from '../types/contracts';
+import { CATEGORIES, type ArticleCard, type Category } from '@/types';
 
 export type Tab = 'all' | Category;
 

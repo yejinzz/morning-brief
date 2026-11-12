@@ -1,10 +1,17 @@
 // Supabase(PostgREST) 읽기 저장소 (M5, 결정 D-3=로그인 없음, anon 읽기).
 // publishable key + anon RLS 로 'ready' 브리핑만 조회. 쓰기는 하지 않는다.
 
-import type { ArticleCard, Briefing, BriefingStatus, Category, Impact } from '../types/contracts';
-import { CATEGORIES, type EvidenceBasis } from '../types/contracts';
+import type {
+  ArticleCard,
+  Briefing,
+  BriefingStatus,
+  Category,
+  EvidenceBasis,
+  Impact,
+} from '@/types';
+import { CATEGORIES } from '@/types';
+import { SUPABASE_URL, supabaseHeaders } from '@/lib/env';
 import type { BriefingsRepo } from './briefingsRepo';
-import { SUPABASE_URL, supabaseHeaders } from './supabaseEnv';
 
 // 임베디드 조회 select (brief + 조인된 기사/분석)
 const SELECT =
