@@ -15,6 +15,10 @@ INSTRUCTION = """\
 - LOW: 일반·부수적 소식.
 
 규칙:
+- **출력 언어는 항상 한국어다.** 입력 기사가 영어 등 외국어여도
+  summary·rationale·dev_relevance 는 반드시 한국어 문장으로 쓴다.
+  고유명사·브랜드·제품명·약어(Nvidia, WSJ, C++ 등)는 원문 표기를 허용하되 문장 자체는 한국어다.
+  keywords 도 한국어 위주로 뽑되 고유명사는 원문 표기 가능.
 - 제공된 제목·설명 범위 밖의 사실을 만들어내지 마라(환각 금지).
 - 제목·설명만으로 판단했으면 evidence_basis="title_desc_only", 그 외 "full".
 - 검증 불가/모호하면 status="held", 내용이 상충하면 "conflict", 정상 분석은 "analyzed".
