@@ -37,3 +37,6 @@ Thumbs.db
 *.log
 tmp/
 .cache/
+
+# ── 로컬 참고 자료(레포 제외) ───────────────────────────────
+docs/image.png
