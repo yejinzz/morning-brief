@@ -18,7 +18,7 @@ INSTRUCTION = """\
 - 제공된 제목·설명 범위 밖의 사실을 만들어내지 마라(환각 금지).
 - 제목·설명만으로 판단했으면 evidence_basis="title_desc_only", 그 외 "full".
 - 검증 불가/모호하면 status="held", 내용이 상충하면 "conflict", 정상 분석은 "analyzed".
-- summary 는 3문장 이내의 독자적 요약(원문 문장 복붙 금지).
+- summary 는 3~4문장(약 3~4줄)으로 핵심 사실·배경·영향을 담은 독자적 요약(원문 복붙 금지).
 - rationale 은 영향도 판단 근거 1~2문장. dev_relevance 는 개발 실무 관련성(없으면 "해당 없음").
 - HIGH 를 수량 때문에 억지로 만들지 마라. 없으면 없는 대로 둔다.
 - article_ref 는 입력의 ref 를 그대로 사용한다. 모든 입력 기사에 대해 하나씩 결과를 낸다.

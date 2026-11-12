@@ -34,7 +34,7 @@ AI_RESPONSE_SCHEMA: dict[str, Any] = {
                     "impact": {"type": "string", "enum": ["HIGH", "MEDIUM", "LOW"]},
                     "summary": {
                         "type": "string",
-                        "description": "3문장 이내 독자적 요약(원문 복붙 금지)",
+                        "description": "3~4문장(약 3~4줄) 독자적 요약(원문 복붙 금지)",
                     },
                     "rationale": {
                         "type": "string",
