@@ -56,7 +56,8 @@ class SupabaseJobStore:
         # 해당 날짜 성공 이력 1건이라도 있으면 True → 예약 다중 실행 시 재작업 스킵.
         rows = self._c.select(
             "collection_jobs",
-            query=f"brief_date=eq.{brief_date}&status=eq.succeeded&select=id&limit=1",
+            # collection_jobs 의 PK 는 run_id(= id 컬럼 없음). 잘못 쓰면 PostgREST 400.
+            query=f"brief_date=eq.{brief_date}&status=eq.succeeded&select=run_id&limit=1",
         )
         return len(rows) > 0
 

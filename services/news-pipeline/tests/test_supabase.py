@@ -31,15 +31,20 @@ NOW = datetime(2026, 11, 10, tzinfo=UTC)
 class FakeTransport:
     def __init__(self) -> None:
         self.calls: list[tuple[str, str, str | None]] = []
+        self.urls: list[str] = []
         self.responses: dict[tuple[str, str], tuple[int, str]] = {}
 
     def __call__(self, method, url, headers, body):
+        self.urls.append(url)
         table = url.split("/rest/v1/")[1].split("?")[0]
         self.calls.append((method, table, body.decode() if body else None))
         return self.responses.get((method, table), (201, ""))
 
     def tables(self, method: str) -> list[str]:
         return [t for (m, t, _) in self.calls if m == method]
+
+    def last_url(self) -> str:
+        return self.urls[-1]
 
 
 def _client(t: FakeTransport) -> PostgrestClient:
@@ -85,7 +90,10 @@ def test_job_already_succeeded() -> None:
     store = SupabaseJobStore(_client(t))
     t.responses[("GET", "collection_jobs")] = (200, "[]")
     assert store.already_succeeded("2026-11-10") is False
-    t.responses[("GET", "collection_jobs")] = (200, json.dumps([{"id": "j1"}]))
+    # collection_jobs 에 id 컬럼은 없다(PK=run_id). 실제 존재하는 컬럼만 조회해야 400 안 남.
+    assert "select=run_id" in t.last_url()
+    assert "select=id" not in t.last_url()
+    t.responses[("GET", "collection_jobs")] = (200, json.dumps([{"run_id": "j1"}]))
     assert store.already_succeeded("2026-11-10") is True
 
 
