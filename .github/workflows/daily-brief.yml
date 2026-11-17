@@ -15,6 +15,10 @@ on:
       date:
         description: '대상 날짜(YYYY-MM-DD, 생략 시 오늘 KST)'
         required: false
+      force:
+        description: '강제 재생성(이미 성공한 날짜도 재작업). 끄면 예약과 동일 경로 검증용.'
+        type: boolean
+        default: true
 
 # 표준 러너만 — public 저장소 무료(larger runner 과금 방지)
 jobs:
@@ -30,8 +34,8 @@ jobs:
       # AI: MB_AI=mock(기본, 비용0) | gemini(실분석). vars 로 전환 가능.
       MB_AI: ${{ vars.MB_AI || 'mock' }}
       MB_GEMINI_MODEL: ${{ vars.MB_GEMINI_MODEL }}
-      # 수동 실행만 강제 재생성. 예약 실행은 미설정 → 이미 성공한 날짜면 스킵.
-      MB_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+      # 예약 실행은 항상 미설정(이미 성공했으면 스킵). 수동 실행은 force 입력(기본 on)에 따름.
+      MB_FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force) && '1' || '' }}
       INPUT_DATE: ${{ github.event.inputs.date }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
